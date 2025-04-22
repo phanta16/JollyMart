@@ -49,7 +49,7 @@ class AuthService(Resource):
             session = db_session.create_session()
             req_json = request.get_json()
 
-            id = req_json.get('u id')
+            id = req_json.get('uid')
             new_password = req_json.get('new_password')
 
             new_hashed_password = hashlib.sha512(new_password.encode('utf-8')).hexdigest()
@@ -64,12 +64,12 @@ class AuthService(Resource):
 
             return jsonify({'status': 'False'})
 
-
-class AuthServices(Resource):
-
-    def delete(self, id):
+    def delete(self):
         try:
-            user = session.get(AuthInfo, id)
+            session = db_session.create_session()
+            req_json = request.get_json()
+            uid = req_json.get('uid')
+            user = session.get(AuthInfo, uid)
             session.delete(user)
             session.commit()
 
@@ -88,6 +88,5 @@ app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 db_session.global_init('db/JollyAuthDB.db')
 
 api.add_resource(AuthService, '/api/auth/')
-api.add_resource(AuthServices, '/api/auth/int:<id>')
 
 app.run()
