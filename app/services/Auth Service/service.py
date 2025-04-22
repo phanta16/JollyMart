@@ -40,6 +40,16 @@ class AuthService(Resource):
                         return jsonify({'status': 'True', 'session_id': user.session_id})
                     else:
                         return jsonify({'status': 'False'})
+            elif tag == 'check':
+                user = session.get(AuthInfo, id)
+                session_id = req_json.get('session_id')
+
+                if user is None:
+                    return jsonify({'status': 'Unknown error!'})
+                elif user.session_id == session_id:
+                    return jsonify({'status': 'True'})
+                else:
+                    return jsonify({'status': 'False'})
 
         except Exception as e:
             return jsonify({'status': f'False, message={str(e)}'})
@@ -89,4 +99,4 @@ db_session.global_init('db/JollyAuthDB.db')
 
 api.add_resource(AuthService, '/api/auth/')
 
-app.run()
+app.run(port=5000, host='0.0.0.0')
