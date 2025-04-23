@@ -11,6 +11,7 @@ app = Flask(__name__)
 
 
 @app.route('/auth/register/', methods=['POST'])
+
 def register():
     try:
         session = db_session.create_session()
