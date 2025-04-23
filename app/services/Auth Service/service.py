@@ -23,7 +23,9 @@ def register():
                         hashed_password=hashlib.sha512(hashed_password.encode('utf-8')).hexdigest())
         session.add(user)
         session.commit()
-        return make_response(jsonify({'status': 'True', 'session_id': session_id, 'uid': user.uid}), 200)
+        responce = make_response(jsonify({'status': 'True', 'session_id': user.session_id}), 200)
+        responce.set_cookie('session_id', user.session_id)
+        return responce
     except requests.exceptions.RequestException as e:
         return make_response(jsonify({'status': 'Something went wrong!', 'message': str(e)}), 404)
 
@@ -43,7 +45,9 @@ def login():
             return make_response(jsonify({'status': 'Такого пользователя не существует!'}), 404)
         else:
             if user.hashed_password == hashlib.sha512(hashed_password.encode('utf-8')).hexdigest():
-                return make_response(jsonify({'status': 'True', 'session_id': user.session_id}), 200)
+                responce = make_response(jsonify({'status': 'True', 'session_id': user.session_id}), 200)
+                responce.set_cookie('session_id', user.session_id)
+                return responce
             else:
                 return make_response(jsonify({'status': 'False'}), 401)
     except requests.exceptions.RequestException as e:
@@ -101,7 +105,6 @@ ROUTES = {
     "/recommendations/": "http://recommendations-service:5000",
     "/search/": "http://search-service:5000",
     "/posts/": "http://posts-service:5000",
-    "/auth/": "http://auth-service:5000",
 }
 
 @app.route("/", defaults={"path": ""}, methods=["GET", "POST", "PUT", "DELETE"])
@@ -111,7 +114,8 @@ def gateway(path):
     session_id = request.cookies.get("session_id")
 
     if not session_id:
-        return jsonify({"error": "Forbidden!"}), 401
+        return jsonify({"error": "Non-authorized"
+                                 ""}), 401
 
     session = db_session.create_session()
     user = session.query(AuthInfo).filter_by(session_id=session_id).first()
@@ -128,7 +132,7 @@ def gateway(path):
         return jsonify({"error": "Unknown service!"}), 404
 
     headers = dict(request.headers)
-    headers["X-User-Id"] = uid
+    headers["X-User-Id"] = str(uid)
 
     try:
         response = requests.request(
