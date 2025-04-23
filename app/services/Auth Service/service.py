@@ -24,7 +24,7 @@ def register():
         session.add(user)
         session.commit()
         responce = make_response(jsonify({'status': 'True', 'session_id': user.session_id}), 200)
-        responce.set_cookie('session_id', user.session_id)
+        responce.set_cookie('session_id', user.session_id, httponly=True)
         return responce
     except requests.exceptions.RequestException as e:
         return make_response(jsonify({'status': 'Something went wrong!', 'message': str(e)}), 404)
@@ -46,7 +46,7 @@ def login():
         else:
             if user.hashed_password == hashlib.sha512(hashed_password.encode('utf-8')).hexdigest():
                 responce = make_response(jsonify({'status': 'True', 'session_id': user.session_id}), 200)
-                responce.set_cookie('session_id', user.session_id)
+                responce.set_cookie('session_id', user.session_id, httponly=True)
                 return responce
             else:
                 return make_response(jsonify({'status': 'False'}), 401)
