@@ -92,6 +92,22 @@ def delete_user():
 
         return make_response(jsonify({'status': 'False', 'message': str(e)}), 401)
 
+@app.route('/auth/validate_user/', methods=['POST'])
+def validate_user():
+    try:
+        session = db_session.create_session()
+        req_json = request.get_json()
+        uid = req_json.get('uid')
+        user = session.get(AuthInfo, uid)
+        if user:
+            return make_response(jsonify({'status': 'True'}), 200)
+        else:
+            return make_response(jsonify({'status': 'False'}), 200)
+
+    except requests.exceptions.RequestException as e:
+
+        return make_response(jsonify({'status': 'Unknown error!', 'message': str(e)}), 401)
+
 
 
 
