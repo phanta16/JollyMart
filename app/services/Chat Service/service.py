@@ -4,11 +4,11 @@ from flask import jsonify, request, make_response, Flask
 from flask_socketio import SocketIO, emit
 
 import db_session
-from model import ChatInfo
+from model import ChatInfo, MessagesInfo
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'THE_MOST_SECRET_KEY_YOU_HAVE_EVER_SEEN'
-socket = SocketIO(app, cors_allowed_origins="*")
+socketServer = SocketIO(app, async_mode='eventlet')
 
 connected_users = {}
 
@@ -64,45 +64,49 @@ def create_chat(receiver_id):
         return make_response(jsonify({'status': 'Unknown error!', 'message': str(e)}), 401)
 
 
-@socket.on('connect')
+@socketServer.on('connect')
 def handle_connect():
     user_id = request.headers.get('X-User-Id')
     if user_id:
         connected_users[user_id] = request.sid
 
 
-@socket.on('message')
+@socketServer.on('message')
 def handle_message(data):
+    if len(connected_users) != 2:
+        return
     sender_id = str(request.headers.get('X-User-Id'))
     try:
         recipient_id = str(data.get('to'))
         message_text = data.get('text')
         recipient_sid = connected_users.get(recipient_id)
-        # session = db_session.create_session()
-        # chat_id = session.query(ChatInfo).filter_by(receiver_id=recipient_id, initiator_id=sender_id).first()
-        # message = MessageInfo(sender_id=sender_id, recipient_id=recipient_id, message_text=message_text,
-        #                       chat_id=chat_id)
-        # session.add(message)
         if recipient_sid:
             emit('message', {
                 "from": sender_id,
                 "text": message_text
             }, to=recipient_sid)
+            session = db_session.create_session()
+            chat_id = session.query(ChatInfo).filter_by(receiver_id=recipient_id, initiator_id=sender_id).first()
+            message = MessagesInfo(sender_id=sender_id, receiver_id=recipient_id, context=message_text,
+                                   chat_id=chat_id)
+            session.add(message)
+            session.commit()
         else:
-            return False
+            print('Error!')
 
-    except Exception:
-        return False
+    except Exception as e:
+        print(e)
 
 
-@socket.on('disconnect')
-def handle_disconnect():
+@socketServer.on('disconnect')
+def disconnection():
     sid = request.sid
-    for uid, saved_sid in list(connected_users.items()):
-        if saved_sid == sid:
+    for uid, s_sid in connected_users.items():
+        if sid == s_sid:
             del connected_users[uid]
             break
 
+
 db_session.global_init('db/JollyChatDB.db')
 
-app.run(port=5000, host='0.0.0.0')
+socketServer.run(app)
