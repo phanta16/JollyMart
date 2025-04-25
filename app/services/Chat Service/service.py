@@ -1,14 +1,15 @@
 import requests
+import socketio
 
 from flask import jsonify, request, make_response, Flask
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, Namespace
 
 import db_session
 from model import ChatInfo, MessagesInfo
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'THE_MOST_SECRET_KEY_YOU_HAVE_EVER_SEEN'
-socketServer = SocketIO(app, async_mode='eventlet')
+socketServer = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
 
 connected_users = {}
 
@@ -56,6 +57,8 @@ def create_chat(receiver_id):
                     "status": "False",
                     "message": "Chat already exists!",
                 }))
+            print(request.headers)
+            print(request.headers.get('X-User-Id'))
             new_chat = ChatInfo(initiator_id=request.headers.get('X-User-Id'), receiver_id=receiver_id)
             session.add(new_chat)
             session.commit()
@@ -64,49 +67,49 @@ def create_chat(receiver_id):
         return make_response(jsonify({'status': 'Unknown error!', 'message': str(e)}), 401)
 
 
-@socketServer.on('connect')
-def handle_connect():
-    user_id = request.headers.get('X-User-Id')
-    if user_id:
-        connected_users[user_id] = request.sid
+class SocketsChat(Namespace):
 
+    def on_connect(self):
+        user_id = request.headers.get('X-User-Id')
+        if user_id:
+            connected_users[user_id] = request.sid
+            print(connected_users)
 
-@socketServer.on('message')
-def handle_message(data):
-    if len(connected_users) != 2:
-        return
-    sender_id = str(request.headers.get('X-User-Id'))
-    try:
-        recipient_id = str(data.get('to'))
-        message_text = data.get('text')
-        recipient_sid = connected_users.get(recipient_id)
-        if recipient_sid:
-            emit('message', {
-                "from": sender_id,
-                "text": message_text
-            }, to=recipient_sid)
-            session = db_session.create_session()
-            chat_id = session.query(ChatInfo).filter_by(receiver_id=recipient_id, initiator_id=sender_id).first()
-            message = MessagesInfo(sender_id=sender_id, receiver_id=recipient_id, context=message_text,
-                                   chat_id=chat_id)
-            session.add(message)
-            session.commit()
-        else:
-            print('Error!')
+    def on_message(self, data):
+        if len(connected_users) != 2:
+            return
+        sender_id = str(request.headers.get('X-User-Id'))
+        try:
+            recipient_id = str(data.get('to'))
+            message_text = data.get('text')
+            recipient_sid = connected_users.get(recipient_id)
+            if recipient_sid:
+                emit('message', {
+                    "from": sender_id,
+                    "text": message_text
+                }, to=recipient_sid)
+                session = db_session.create_session()
+                chat_id = session.query(ChatInfo).filter_by(receiver_id=recipient_id, initiator_id=sender_id).first()
+                message = MessagesInfo(sender_id=sender_id, receiver_id=recipient_id, context=message_text,
+                                       chat_id=chat_id)
+                session.add(message)
+                session.commit()
+            else:
+                print('Error!')
 
-    except Exception as e:
-        print(e)
+        except Exception as e:
+            print(e)
 
+    def on_disconnect(self):
+        sid = request.sid
+        for uid, s_sid in connected_users.items():
+            if sid == s_sid:
+                del connected_users[uid]
+                break
 
-@socketServer.on('disconnect')
-def disconnection():
-    sid = request.sid
-    for uid, s_sid in connected_users.items():
-        if sid == s_sid:
-            del connected_users[uid]
-            break
+socketServer.on_namespace(SocketsChat("/chat")) # Здесь надо поменять на int
 
 
 db_session.global_init('db/JollyChatDB.db')
 
-socketServer.run(app)
+socketServer.run(app, port=5001, host='0.0.0.0')

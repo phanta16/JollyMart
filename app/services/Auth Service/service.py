@@ -113,16 +113,18 @@ def validate_user():
 
 ROUTES = {
 
-    "/chat/": "http://chat-service:5000",
-    "/user/": "http://user-service:5000",
-    "/comment/": "http://comment-service:5000",
-    "/favourite/": "http://favourite-service:5000",
-    "/media/": "http://media-service:5000",
-    "/notifications/": "http://notifications-service:5000",
-    "/recommendations/": "http://recommendations-service:5000",
-    "/search/": "http://search-service:5000",
-    "/posts/": "http://posts-service:5000",
+    "/chat/": "http://chat-service:5001",
+    "/user/": "http://user-service:5002",
+    "/comment/": "http://comment-service:5003",
+    "/favourite/": "http://favourite-service:5004",
+    "/media/": "http://media-service:5005",
+    "/notifications/": "http://notifications-service:5006",
+    "/recommendations/": "http://recommendations-service:5007",
+    "/search/": "http://search-service:5008",
+    "/posts/": "http://posts-service:5009",
 }
+
+'''Возможно проблема тут!!!'''
 
 @app.route("/", defaults={"path": ""}, methods=["GET", "POST", "PUT", "DELETE"])
 @app.route("/<path:path>", methods=["GET", "POST", "PUT", "DELETE"])
@@ -163,6 +165,7 @@ def gateway(path):
         return jsonify({"error": "Service unavailable!", "detail": str(e)}), 502
 
     f_response = make_response(response.content, response.status_code)
+    print(f_response.headers)
     for name, value in response.headers.items():
         flask_response.headers[name] = value
 
