@@ -1,6 +1,6 @@
 FROM python:3.12
 
-WORKDIR /app/services/Auth Service
+WORKDIR /app/services/auth-service
 
 COPY . .
 

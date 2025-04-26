@@ -1,6 +1,6 @@
 FROM python:3.12
 
-WORKDIR /app/services/Chat Service
+WORKDIR /app/services/chat-service
 
 COPY . .
 
