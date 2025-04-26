@@ -137,16 +137,16 @@ def gateway(path):
     session = db_session.create_session()
     user = session.query(AuthInfo).filter_by(session_id=session_id).first()
     if not user:
-        return jsonify({"error": "Invalid session"}), 403
+        return jsonify({"error": "Invalid session"})
 
     uid = user.uid
 
     for prefix, target_url in ROUTES.items():
         if request.path.startswith(prefix):
-            service_url = target_url + request.path[len(prefix)-1:]
+            service_url = target_url + prefix[:-1] + request.path[len(prefix)-1:]
             break
     else:
-        return jsonify({"error": "Unknown service!"}), 404
+        return jsonify({"error": "Unknown service!"})
 
     headers = dict(request.headers)
     headers["X-User-Id"] = str(uid)
@@ -160,10 +160,13 @@ def gateway(path):
             json=request.get_json(silent=True)
         )
     except requests.exceptions.RequestException as e:
-        return jsonify({"error": "Service unavailable!", "detail": str(e)}), 502
+        return jsonify({"error": "Service unavailable!", "detail": str(e)})
     f_response = make_response(response.content, response.status_code)
+    excluded = ['content-encoding', 'transfer-encoding', 'connection', 'content-length']
     for name, value in headers.items():
-        f_response.headers[name] = value
+        if name not in excluded:
+            f_response.headers[name] = value
+    print(f_response.headers)
 
     return f_response
 

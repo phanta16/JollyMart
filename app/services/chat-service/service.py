@@ -21,9 +21,9 @@ connected_users = {}
 def get(chat_id):
     try:
         session = db_session.create_session()
-        messages = session.query(ChatInfo).filter_by(chat_id=chat_id).all()
+        messages = session.query(MessagesInfo).filter_by(chat_id=chat_id).all()
         if len(messages) == 0:
-            return make_response(jsonify({"status": "No messages!"}), 200)
+            return make_response(jsonify({"status": "No messages!"}))
         return make_response(jsonify([{
 
             'message': m.context,
@@ -35,7 +35,7 @@ def get(chat_id):
             for m in messages]))
     except requests.exceptions.RequestException as e:
 
-        return make_response(jsonify({'status': 'Unknown error!', 'message': str(e)}), 401)
+        return make_response(jsonify({'status': 'Unknown error!', 'message': str(e)}))
 
 
 @app.route('/chat/new-chat/<receiver_id>', methods=['POST'])
@@ -56,7 +56,7 @@ def create_chat(receiver_id):
         else:
             if session.query(ChatInfo).filter_by(receiver_id=receiver_id,
                                                  initiator_id=request.headers.get('X-User-Id')).first() is not None:
-                return make_response(jsonify({"status": "False"}, 200))
+                return make_response(jsonify({"status": "False"}))
 
             new_chat = ChatInfo(initiator_id=request.headers.get('X-User-Id'), receiver_id=receiver_id)
             session.add(new_chat)
@@ -66,7 +66,7 @@ def create_chat(receiver_id):
 
     except Exception as e:
 
-        return jsonify({'status': 'Unknown error!', 'message': str(e)}), 401
+        return jsonify({'status': 'Unknown error!', 'message': str(e)})
 
 
 class SocketsChat(Namespace):
@@ -112,7 +112,7 @@ class SocketsChat(Namespace):
                 break
 
 
-socketServer.on_namespace(SocketsChat("/chat"))
+socketServer.on_namespace(SocketsChat("/socket"))
 
 db_session.global_init('db/JollyChatDB.db')
 
