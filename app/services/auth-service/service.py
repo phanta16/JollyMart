@@ -113,7 +113,7 @@ def validate_user():
 
 ROUTES = {
 
-    "/chat/": "http://127.0.0.1:5001/chat",
+    "/chat/": "http://chat-service:5001",
     "/user/": "http://127.0.0.1:5002/user",
     "/comment/": "http://127.0.0.1:5003/comment",
     "/favourite/": "http://127.0.0.1:5004/favourite",

@@ -1,13 +1,18 @@
 import requests
 from flask import jsonify, request, make_response, Flask
 from flask_socketio import SocketIO, emit, Namespace
+import logging
 
 import db_session
 from model import ChatInfo, MessagesInfo
 
 app = Flask(__name__)
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 app.config['SECRET_KEY'] = 'THE_MOST_SECRET_KEY_YOU_HAVE_EVER_SEEN'
-socketServer = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
+socketServer = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*", logger=True, engineio_logger=True)
 
 connected_users = {}
 
