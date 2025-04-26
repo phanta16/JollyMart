@@ -10,15 +10,15 @@ from db_session import SqlAlchemyBase
 class ChatInfo(SqlAlchemyBase, UserMixin, SerializerMixin):
     __tablename__ = 'chat_info'
     chat_id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
-    initiator_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
-    receiver_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
+    initiator_id = sqlalchemy.Column(sqlalchemy.String, nullable=False)
+    receiver_id = sqlalchemy.Column(sqlalchemy.String, nullable=False)
 
 
 class MessagesInfo(SqlAlchemyBase, UserMixin, SerializerMixin):
     __tablename__ = 'message_info'
     id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False, primary_key=True, autoincrement=True)
-    chat_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
+    chat_id = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     context = sqlalchemy.Column(sqlalchemy.String, nullable=False)
-    sender_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
-    receiver_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
+    sender_id = sqlalchemy.Column(sqlalchemy.String, nullable=False)
+    receiver_id = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     timestamp = sqlalchemy.Column(sqlalchemy.DateTime, nullable=False, default=datetime.datetime.now())

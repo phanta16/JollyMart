@@ -1,6 +1,4 @@
 import requests
-import socketio
-
 from flask import jsonify, request, make_response, Flask
 from flask_socketio import SocketIO, emit, Namespace
 
@@ -53,7 +51,6 @@ def create_chat(receiver_id):
         else:
             if session.query(ChatInfo).filter_by(receiver_id=receiver_id,
                                                  initiator_id=request.headers.get('X-User-Id')).first() is not None:
-
                 return make_response(jsonify({"status": "False"}, 200))
 
             new_chat = ChatInfo(initiator_id=request.headers.get('X-User-Id'), receiver_id=receiver_id)
@@ -86,15 +83,17 @@ class SocketsChat(Namespace):
                 emit('message', {
                     "from": sender_id,
                     "text": message_text
-                },   to=recipient_sid)
+                }, to=recipient_sid)
                 session = db_session.create_session()
-                chat_id = session.query(ChatInfo).filter_by(receiver_id=recipient_id, initiator_id=sender_id).first()
+                chat_id = session.query(ChatInfo).filter_by(initiator_id=sender_id, receiver_id=recipient_id).first()
+                if chat_id is None:
+                    chat_id = session.query(ChatInfo).filter_by(initiator_id=recipient_id,
+                                                                receiver_id=sender_id).first()
                 message = MessagesInfo(sender_id=sender_id, receiver_id=recipient_id, context=message_text,
-                                       chat_id=chat_id)
+                                       chat_id=chat_id.chat_id)
                 session.add(message)
                 session.commit()
             else:
-
                 print('Error!')
 
         except Exception as e:
@@ -107,8 +106,8 @@ class SocketsChat(Namespace):
                 del connected_users[uid]
                 break
 
-socketServer.on_namespace(SocketsChat("/chat"))
 
+socketServer.on_namespace(SocketsChat("/chat"))
 
 db_session.global_init('db/JollyChatDB.db')
 
