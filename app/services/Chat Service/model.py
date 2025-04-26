@@ -21,4 +21,4 @@ class MessagesInfo(SqlAlchemyBase, UserMixin, SerializerMixin):
     context = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     sender_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
     receiver_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
-    timestamp = sqlalchemy.Column(sqlalchemy.DateTime, nullable=False)
+    timestamp = sqlalchemy.Column(sqlalchemy.DateTime, nullable=False, default=datetime.datetime.now())

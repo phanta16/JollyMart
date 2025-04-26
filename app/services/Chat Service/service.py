@@ -46,25 +46,25 @@ def create_chat(receiver_id):
         validate = requests.post('http://127.0.0.1:5000/auth/validate_user/', json=us)
         validate = validate.json()
         if validate["status"] != "True":
-            return make_response(jsonify({
+            return jsonify({
                 "status": "False",
                 "message": "User is not exists!",
-            }))
+            })
         else:
             if session.query(ChatInfo).filter_by(receiver_id=receiver_id,
                                                  initiator_id=request.headers.get('X-User-Id')).first() is not None:
-                return make_response(jsonify({
-                    "status": "False",
-                    "message": "Chat already exists!",
-                }))
-            print(request.headers)
-            print(request.headers.get('X-User-Id'))
+
+                return make_response(jsonify({"status": "False"}, 200))
+
             new_chat = ChatInfo(initiator_id=request.headers.get('X-User-Id'), receiver_id=receiver_id)
             session.add(new_chat)
             session.commit()
-    except requests.exceptions.RequestException as e:
 
-        return make_response(jsonify({'status': 'Unknown error!', 'message': str(e)}), 401)
+            return make_response(jsonify({"status": "True"}))
+
+    except Exception as e:
+
+        return jsonify({'status': 'Unknown error!', 'message': str(e)}), 401
 
 
 class SocketsChat(Namespace):
@@ -73,7 +73,6 @@ class SocketsChat(Namespace):
         user_id = request.headers.get('X-User-Id')
         if user_id:
             connected_users[user_id] = request.sid
-            print(connected_users)
 
     def on_message(self, data):
         if len(connected_users) != 2:
@@ -87,7 +86,7 @@ class SocketsChat(Namespace):
                 emit('message', {
                     "from": sender_id,
                     "text": message_text
-                }, to=recipient_sid)
+                },   to=recipient_sid)
                 session = db_session.create_session()
                 chat_id = session.query(ChatInfo).filter_by(receiver_id=recipient_id, initiator_id=sender_id).first()
                 message = MessagesInfo(sender_id=sender_id, receiver_id=recipient_id, context=message_text,
@@ -95,6 +94,7 @@ class SocketsChat(Namespace):
                 session.add(message)
                 session.commit()
             else:
+
                 print('Error!')
 
         except Exception as e:
@@ -107,7 +107,7 @@ class SocketsChat(Namespace):
                 del connected_users[uid]
                 break
 
-socketServer.on_namespace(SocketsChat("/chat")) # Здесь надо поменять на int
+socketServer.on_namespace(SocketsChat("/chat"))
 
 
 db_session.global_init('db/JollyChatDB.db')
