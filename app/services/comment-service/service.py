@@ -15,26 +15,30 @@ def all_comments():
 
     try:
         comments = session.query(CommentaryInfo).filter_by(post_id=post_id).all()
-        return make_response(jsonify({
-                                         "comment_id": c.comment_id,
-                                         "post_id": c.post_id,
-                                         "comment_author_id": c.comment_author_id,
-                                         "context": c.context,
-                                     } for c in comments))
+        return make_response(jsonify([{
+
+            'comment_id': c.comment_id,
+            'comment_author_id': c.comment_author_id,
+            'post_id': c.post_id,
+            'context': c.context,
+            'datestamp': c.timestamp,
+
+        }
+            for c in comments]))
     except Exception as e:
         return make_response(jsonify({"error": str(e)}))
 
 
 @app.route('/comment/new-comment', methods=['POST'])
 def new_comment():
-    request_data = request.get_json()
-
-    session = db_session.create_session()
-    post_id = request_data['post_id']
-    comment_author_id = request_data['comment_author_id']
-    context = request_data['context']
-
     try:
+        request_data = request.get_json()
+
+        session = db_session.create_session()
+        post_id = request_data['post_id']
+        comment_author_id = request_data['comment_author_id']
+        context = request_data['context']
+
         comment = CommentaryInfo(comment_author_id=comment_author_id, post_id=post_id, context=context)
         session.add(comment)
         session.commit()
