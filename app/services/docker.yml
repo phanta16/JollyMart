@@ -26,7 +26,15 @@ services:
     build: ./comment-service
     depends_on:
       - auth-service
-      - chat-service
+
+  favourite-service:
+    expose:
+      - "5004"
+    networks:
+      - internal
+    build: ./favourite-service
+    depends_on:
+      - auth-service
 
 networks:
   internal:
