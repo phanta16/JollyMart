@@ -114,14 +114,14 @@ def validate_user():
 ROUTES = {
 
     "/chat/": "http://chat-service:5001",
-    "/user/": "http://127.0.0.1:5002/user",
-    "/comment/": "http://127.0.0.1:5003/comment",
-    "/favourite/": "http://127.0.0.1:5004/favourite",
-    "/media/": "http://127.0.0.1:5005/comment",
-    "/notifications/": "http://127.0.0.1:5006/notifications",
-    "/recommendations/": "http://127.0.0.1:5007/recommendations",
-    "/search/": "http://127.0.0.1:5008/search",
-    "/posts/": "http://127.0.0.1:5009/posts",
+    "/comment/": "http://comment-service:5002",
+    "/user/": "http://user-service:5003",
+    "/favourite/": "http://favourite-service:5004",
+    "/media/": "http://media-service:5005",
+    "/notifications/": "http://notifications-service:5006",
+    "/recommendations/": "http://recommendations-service:5007",
+    "/search/": "http://search-service:5008",
+    "/posts/": "http://posts-service:5009",
 }
 
 @app.route("/", defaults={"path": ""}, methods=["GET", "POST", "PUT", "DELETE"])
