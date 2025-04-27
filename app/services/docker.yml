@@ -18,6 +18,16 @@ services:
     depends_on:
       - auth-service
 
+  comment-service:
+    expose:
+      - "5002"
+    networks:
+      - internal
+    build: ./comment-service
+    depends_on:
+      - auth-service
+      - chat-service
+
 networks:
   internal:
     driver: bridge
