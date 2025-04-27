@@ -11,9 +11,9 @@ def all_comments():
     request_data = request.get_json()
 
     session = db_session.create_session()
-    post_id = request_data['post_id']
 
     try:
+        post_id = request_data['post_id']
         comments = session.query(CommentaryInfo).filter_by(post_id=post_id).all()
         return make_response(jsonify([{
 
@@ -53,11 +53,11 @@ def delete_comment():
     request_data = request.get_json()
 
     session = db_session.create_session()
-    post_id = request_data['post_id']
-    comment_author_id = request_data['comment_author_id']
-    context = request_data['context']
 
     try:
+        post_id = request_data['post_id']
+        comment_author_id = request_data['comment_author_id']
+        context = request_data['context']
         comment = session.query(CommentaryInfo).filter_by(comment_author_id=comment_author_id, post_id=post_id,
                                                           context=context).first()
         session.delete(comment)
@@ -73,12 +73,12 @@ def change_comment():
     request_data = request.get_json()
 
     session = db_session.create_session()
-    post_id = request_data['post_id']
-    comment_author_id = request_data['comment_author_id']
-    context = request_data['context']
-    new_context = request_data['new_context']
 
     try:
+        post_id = request_data['post_id']
+        comment_author_id = request_data['comment_author_id']
+        context = request_data['context']
+        new_context = request_data['new_context']
         comment = session.query(CommentaryInfo).filter_by(comment_author_id=comment_author_id, post_id=post_id,
                                                           context=context).first()
         comment.context = new_context
