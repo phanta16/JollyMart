@@ -52,6 +52,7 @@ def login():
                 return responce
             else:
                 return make_response(jsonify({'status': 'False', "message": "Неверный пароль!"}), 401)
+
     except requests.exceptions.RequestException as e:
         return make_response(jsonify({'status': 'Something went wrong!', 'message': str(e)}), 404)
 
