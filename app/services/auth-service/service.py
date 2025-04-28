@@ -171,7 +171,6 @@ def gateway(path):
             break
     else:
         return jsonify({"error": "Unknown service!"})
-
     headers = dict(request.headers)
     headers["X-User-Id"] = str(uid)
 
