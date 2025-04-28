@@ -10,7 +10,7 @@ from model import AuthInfo
 app = Flask(__name__)
 
 
-@app.route('/auth/register/', methods=['POST'])
+@app.route('/auth/register', methods=['POST'])
 
 def register():
     try:
@@ -18,10 +18,11 @@ def register():
         req_json = request.get_json()
 
         hashed_password = req_json.get('password')
+        email = req_json.get('email')
         session_id = secrets.token_hex(16)
 
         user = AuthInfo(session_id=session_id,
-                        hashed_password=hashlib.sha512(hashed_password.encode('utf-8')).hexdigest())
+                        hashed_password=hashlib.sha512(hashed_password.encode('utf-8')).hexdigest(), email=email)
         session.add(user)
         session.commit()
         responce = make_response(jsonify({'status': 'True', 'session_id': user.session_id}), 200)
@@ -31,26 +32,26 @@ def register():
         return make_response(jsonify({'status': 'Something went wrong!', 'message': str(e)}), 404)
 
 
-@app.route('/auth/login/', methods=['POST'])
+@app.route('/auth/login', methods=['POST'])
 def login():
     try:
         session = db_session.create_session()
         req_json = request.get_json()
 
-        uid = req_json.get('uid')
+        email = req_json.get('email')
         hashed_password = req_json.get('password')
 
-        user = session.get(AuthInfo, uid)
+        user = session.query(AuthInfo).filter(AuthInfo.email == email).first()
 
         if user is None:
-            return make_response(jsonify({'status': 'Такого пользователя не существует!'}), 404)
+            return make_response(jsonify({'status': 'Такого пользователя не существует!'}))
         else:
             if user.hashed_password == hashlib.sha512(hashed_password.encode('utf-8')).hexdigest():
                 responce = make_response(jsonify({'status': 'True', 'session_id': user.session_id}), 200)
                 responce.set_cookie('session_id', user.session_id, httponly=True)
                 return responce
             else:
-                return make_response(jsonify({'status': 'False'}), 401)
+                return make_response(jsonify({'status': 'False', "message": "Неверный пароль!"}), 401)
     except requests.exceptions.RequestException as e:
         return make_response(jsonify({'status': 'Something went wrong!', 'message': str(e)}), 404)
 
@@ -68,6 +69,25 @@ def change_password():
 
         user = session.get(AuthInfo, id)
         user.hashed_password = new_hashed_password
+        session.commit()
+
+        return make_response(jsonify({'status': 'True'}), 200)
+
+    except requests.exceptions.RequestException as e:
+
+        return make_response(jsonify({'status': 'False', 'message': str(e)}), 401)
+
+@app.route('/auth/change_email/', methods=['PATCH'])
+def change_email():
+    try:
+        session = db_session.create_session()
+        req_json = request.get_json()
+
+        id = req_json.get('uid')
+        new_email = req_json.get('email')
+
+        user = session.get(AuthInfo, id)
+        user.email = new_email
         session.commit()
 
         return make_response(jsonify({'status': 'True'}), 200)

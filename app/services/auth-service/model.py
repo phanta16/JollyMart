@@ -13,3 +13,4 @@ class AuthInfo(SqlAlchemyBase, UserMixin, SerializerMixin):
     uid = sqlalchemy.Column(sqlalchemy.Integer, nullable=False, autoincrement=True, primary_key=True)
     session_id = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=False)
+    email = sqlalchemy.Column(sqlalchemy.String, nullable=False, unique=True)
