@@ -1,8 +1,8 @@
 import hashlib
 import secrets
 
-from flask import jsonify, request, Flask, make_response
 import requests
+from flask import jsonify, request, Flask, make_response
 
 import db_session
 from model import AuthInfo
@@ -11,7 +11,6 @@ app = Flask(__name__)
 
 
 @app.route('/auth/register', methods=['POST'])
-
 def register():
     try:
         session = db_session.create_session()
@@ -25,7 +24,10 @@ def register():
                         hashed_password=hashlib.sha512(hashed_password.encode('utf-8')).hexdigest(), email=email)
         session.add(user)
         session.commit()
-        responce = make_response(jsonify({'status': 'True', 'session_id': user.session_id}), 200)
+
+        user_id = session.query(AuthInfo).filter(AuthInfo.email == email).first()
+
+        responce = make_response(jsonify({'status': 'True', 'session_id': user.session_id, "uid": user_id.uid}), 200)
         responce.set_cookie('session_id', user.session_id, httponly=True)
         return responce
     except requests.exceptions.RequestException as e:
@@ -78,6 +80,7 @@ def change_password():
 
         return make_response(jsonify({'status': 'False', 'message': str(e)}), 401)
 
+
 @app.route('/auth/change_email/', methods=['PATCH'])
 def change_email():
     try:
@@ -97,6 +100,7 @@ def change_email():
 
         return make_response(jsonify({'status': 'False', 'message': str(e)}), 401)
 
+
 @app.route('/auth/delete_user/', methods=['DELETE'])
 def delete_user():
     try:
@@ -112,6 +116,7 @@ def delete_user():
     except requests.exceptions.RequestException as e:
 
         return make_response(jsonify({'status': 'False', 'message': str(e)}), 401)
+
 
 @app.route('/auth/validate_user/', methods=['POST'])
 def validate_user():
@@ -130,8 +135,6 @@ def validate_user():
         return make_response(jsonify({'status': 'Unknown error!', 'message': str(e)}), 401)
 
 
-
-
 ROUTES = {
 
     "/chat/": "http://chat-service:5001",
@@ -145,10 +148,10 @@ ROUTES = {
     "/posts/": "http://posts-service:5009",
 }
 
+
 @app.route("/", defaults={"path": ""}, methods=["GET", "POST", "PUT", "DELETE"])
 @app.route("/<path:path>", methods=["GET", "POST", "PUT", "DELETE"])
 def gateway(path):
-
     session_id = request.cookies.get("session_id")
 
     if not session_id:
@@ -164,7 +167,7 @@ def gateway(path):
 
     for prefix, target_url in ROUTES.items():
         if request.path.startswith(prefix):
-            service_url = target_url + prefix[:-1] + request.path[len(prefix)-1:]
+            service_url = target_url + prefix[:-1] + request.path[len(prefix) - 1:]
             break
     else:
         return jsonify({"error": "Unknown service!"})
