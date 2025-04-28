@@ -56,7 +56,7 @@ def login():
         return make_response(jsonify({'status': 'Something went wrong!', 'message': str(e)}), 404)
 
 
-@app.route('/auth/change_password/', methods=['PATCH'])
+@app.route('/auth/change_password', methods=['PATCH'])
 def change_password():
     try:
         session = db_session.create_session()
@@ -84,7 +84,7 @@ def change_email():
         req_json = request.get_json()
 
         id = req_json.get('uid')
-        new_email = req_json.get('email')
+        new_email = req_json.get('new_email')
 
         user = session.get(AuthInfo, id)
         user.email = new_email
