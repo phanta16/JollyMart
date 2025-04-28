@@ -27,6 +27,15 @@ services:
     depends_on:
       - auth-service
 
+  user-service:
+    expose:
+      - "5003"
+    networks:
+      - internal
+    build: ./user-service
+    depends_on:
+      - auth-service
+
   favourite-service:
     expose:
       - "5004"
