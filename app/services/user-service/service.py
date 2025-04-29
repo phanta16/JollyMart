@@ -66,7 +66,7 @@ def get_user():
             return jsonify({"status": "False", "message": "Пользователя не существует!"})
 
         favourites = requests.post("http://favourite-service:5004/favourite/all-favourites",
-                                   data={"user_id": uid}, headers=headers).json()
+                                   json={"user_id": uid}, headers=headers).json()
 
         return make_response(jsonify({"uid": uid,
                                       "username": user.username,
@@ -93,7 +93,7 @@ def add_user():
 
         if check_data(password, email, username)["status"] == "True":
             auth_operation = requests.post("http://auth-service:5000/auth/register",
-                                           data={"password": password, "email": email}, headers=headers).json()
+                                           json={"password": password, "email": email}, headers=headers).json()
 
             if auth_operation["status"] == "True":
                 uid = auth_operation["uid"]
@@ -130,7 +130,7 @@ def patch_email():
             return jsonify({"status": "False", "message": "Пользователя не существует!"})
 
         auth_operation = requests.post("http://auth-service:5000/auth/change_email",
-                                       data={"uid": uid, "new_mail": new_mail}, headers=headers).json()
+                                       json={"uid": uid, "new_mail": new_mail}, headers=headers).json()
 
         if auth_operation["status"] == "True":
             return jsonify({"status": "True"})
@@ -160,7 +160,7 @@ def patch_password():
             return jsonify({"status": "False", "message": "Пользователя не существует!"})
 
         auth_operation = requests.post("http://auth-service:5000/auth/change_password",
-                                       data={"uid": uid, "new_mail": new_password}, headers=headers).json()
+                                       json={"uid": uid, "new_mail": new_password}, headers=headers).json()
 
         if auth_operation["status"] == "True":
             return jsonify({"status": "True"})
@@ -190,7 +190,7 @@ def delete_user():
             return jsonify({"status": "False", "message": "Пользователя не существует!"})
 
         auth_operation = requests.post("http://auth-service:5000/auth/delete_user",
-                                       data={"uid": uid}, headers=headers).json()
+                                       json={"uid": uid}, headers=headers).json()
 
         if auth_operation["status"] == "True":
             session.delete(user)

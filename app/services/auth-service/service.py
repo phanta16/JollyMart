@@ -30,7 +30,7 @@ def register():
         responce = make_response(jsonify({'status': 'True', 'session_id': user.session_id, "uid": user_id.uid}), 200)
         responce.set_cookie('session_id', user.session_id, httponly=True)
         return responce
-    except requests.exceptions.RequestException as e:
+    except Exception as e:
         return make_response(jsonify({'status': 'Something went wrong!', 'message': str(e)}), 404)
 
 
@@ -55,7 +55,7 @@ def login():
             else:
                 return make_response(jsonify({'status': 'False', "message": "Неверный пароль!"}), 401)
 
-    except requests.exceptions.RequestException as e:
+    except Exception as e:
         return make_response(jsonify({'status': 'Something went wrong!', 'message': str(e)}), 404)
 
 
@@ -76,7 +76,7 @@ def change_password():
 
         return make_response(jsonify({'status': 'True'}), 200)
 
-    except requests.exceptions.RequestException as e:
+    except Exception as e:
 
         return make_response(jsonify({'status': 'False', 'message': str(e)}), 401)
 
@@ -96,7 +96,7 @@ def change_email():
 
         return make_response(jsonify({'status': 'True'}), 200)
 
-    except requests.exceptions.RequestException as e:
+    except Exception as e:
 
         return make_response(jsonify({'status': 'False', 'message': str(e)}), 401)
 
@@ -113,7 +113,7 @@ def delete_user():
 
         return make_response(jsonify({'status': 'True'}), 200)
 
-    except requests.exceptions.RequestException as e:
+    except Exception as e:
 
         return make_response(jsonify({'status': 'False', 'message': str(e)}), 401)
 
@@ -130,7 +130,7 @@ def validate_user():
         else:
             return make_response(jsonify({'status': 'False'}), 200)
 
-    except requests.exceptions.RequestException as e:
+    except Exception as e:
 
         return make_response(jsonify({'status': 'Unknown error!', 'message': str(e)}), 401)
 
