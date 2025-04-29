@@ -185,11 +185,10 @@ def gateway(path):
     except requests.exceptions.RequestException as e:
         return jsonify({"error": "Service unavailable!", "detail": str(e)})
     f_response = make_response(response.content, response.status_code)
-    excluded = ['content-encoding', 'transfer-encoding', 'connection', 'content-length']
+    excluded = ['Content-Encoding', 'Transfer-Encoding', 'Connection', 'Content-Length']
     for name, value in headers.items():
         if name not in excluded:
             f_response.headers[name] = value
-    print(f_response.headers)
 
     return f_response
 

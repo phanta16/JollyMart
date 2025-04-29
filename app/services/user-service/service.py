@@ -47,24 +47,27 @@ def check_data(password, email, username):
     except EmailNotValidError:
         return jsonify({"status": "False", "message": 'E-mail недействителен!'})
 
-    return jsonify({"status": "True",})
+    return jsonify({"status": "True", })
 
 
 @app.route('/user/get-user', methods=['POST'])
 def get_user():
     try:
+
+        headers = dict(request.headers)
+
         session = db_session.create_session()
         req = request.get_json()
 
         uid = req['uid']
 
-        user = session.query(UserInfo).filter(UserInfo.uid == uid)
+        user = session.query(UserInfo).filter(UserInfo.uid == uid).first()
 
         if user is None:
             return jsonify({"status": "False", "message": "Пользователя не существует!"})
 
         favourites = requests.post("http://favourite-service:5004/favourite/all-favourites",
-                                   data={"user_id": uid}).json()
+                                   data={"user_id": uid}, headers=headers).json()
 
         return make_response(jsonify({"uid": uid,
                                       "username": user.username,
@@ -79,6 +82,9 @@ def get_user():
 @app.route('/user/add-user', methods=['POST'])
 def add_user():
     try:
+
+        headers = dict(request.headers)
+
         session = db_session.create_session()
         req = request.get_json()
 
@@ -88,7 +94,7 @@ def add_user():
 
         if check_data(password, email, username)["status"] == "True":
             auth_operation = requests.post("http://auth-service:5000/auth/register",
-                                           data={"password": password, "email": email}).json()
+                                           data={"password": password, "email": email}, headers=headers).json()
 
             if auth_operation["status"] == "True":
                 uid = auth_operation["uid"]
@@ -96,6 +102,8 @@ def add_user():
                 user = UserInfo(uid=uid, username=username, email=email)
                 session.add(user)
                 session.commit()
+
+                return jsonify({"status": "True", })
 
             else:
                 return jsonify({"status": "False", "message": auth_operation["message"]})
@@ -108,19 +116,22 @@ def add_user():
 @app.route('/user/patch-email', methods=['PATCH'])
 def patch_email():
     try:
+
+        headers = dict(request.headers)
+
         session = db_session.create_session()
         req = request.get_json()
 
         uid = req['uid']
         new_mail = req['new_mail']
 
-        user = session.query(UserInfo).filter(UserInfo.uid == uid)
+        user = session.query(UserInfo).filter(UserInfo.uid == uid).first()
 
         if user is None:
             return jsonify({"status": "False", "message": "Пользователя не существует!"})
 
         auth_operation = requests.post("http://auth-service:5000/auth/change_email",
-                                       data={"uid": uid, "new_mail": new_mail}).json()
+                                       data={"uid": uid, "new_mail": new_mail}, headers=headers).json()
 
         if auth_operation["status"] == "True":
             return jsonify({"status": "True"})
@@ -135,6 +146,8 @@ def patch_email():
 
 @app.route('/user/patch-password', methods=['PATCH'])
 def patch_password():
+    headers = dict(request.headers)
+
     try:
         session = db_session.create_session()
         req = request.get_json()
@@ -142,13 +155,13 @@ def patch_password():
         uid = req['uid']
         new_password = req['new_mail']
 
-        user = session.query(UserInfo).filter(UserInfo.uid == uid)
+        user = session.query(UserInfo).filter(UserInfo.uid == uid).first()
 
         if user is None:
             return jsonify({"status": "False", "message": "Пользователя не существует!"})
 
         auth_operation = requests.post("http://auth-service:5000/auth/change_password",
-                                       data={"uid": uid, "new_mail": new_password}).json()
+                                       data={"uid": uid, "new_mail": new_password}, headers=headers).json()
 
         if auth_operation["status"] == "True":
             return jsonify({"status": "True"})
@@ -164,18 +177,21 @@ def patch_password():
 @app.route('/user/delete-user', methods=['DELETE'])
 def delete_user():
     try:
+
+        headers = dict(request.headers)
+
         session = db_session.create_session()
         req = request.get_json()
 
         uid = req['uid']
 
-        user = session.query(UserInfo).filter(UserInfo.uid == uid)
+        user = session.query(UserInfo).filter(UserInfo.uid == uid).first()
 
         if user is None:
             return jsonify({"status": "False", "message": "Пользователя не существует!"})
 
         auth_operation = requests.post("http://auth-service:5000/auth/delete_user",
-                                       data={"uid": uid}).json()
+                                       data={"uid": uid}, headers=headers).json()
 
         if auth_operation["status"] == "True":
             session.delete(user)
