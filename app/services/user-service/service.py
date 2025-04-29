@@ -26,7 +26,9 @@ def check_data(password, email, username):
             {"status": "False", "message": "Пароль должен содержать в себе минимум 1 заглавную букву, и одну цифру!"})
 
     session = db_session.create_session()
-    if session.query(UserInfo).filter(UserInfo.email == email | UserInfo.username == username) is not None:
+    if session.query(UserInfo).filter(
+            (UserInfo.email == email) | (UserInfo.username == username)
+    ) is not None:
         return jsonify({"status": "False", "message": "Пользователь уже существует!"})
 
     if 3 > len(username):
