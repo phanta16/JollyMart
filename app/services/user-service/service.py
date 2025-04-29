@@ -12,7 +12,7 @@ def check_data(password, email, username):
     check_flag = False
 
     if len(password) < 8:
-        return jsonify({"status": "False", "message": "Пароль должен быть как минимум 8 символов!"})
+        return {"status": "False", "message": "Пароль должен быть как минимум 8 символов!"}
 
     for letter in password:
         if letter.isdigit():
@@ -22,34 +22,31 @@ def check_data(password, email, username):
             check_flag = True
             break
     if not check_flag:
-        return jsonify(
-            {"status": "False", "message": "Пароль должен содержать в себе минимум 1 заглавную букву, и одну цифру!"})
+        return {"status": "False", "message": "Пароль должен содержать в себе минимум 1 заглавную букву, и одну цифру!"}
 
     session = db_session.create_session()
     if session.query(UserInfo).filter(
             (UserInfo.email == email) | (UserInfo.username == username)
     ) is not None:
-        return jsonify({"status": "False", "message": "Пользователь уже существует!"})
+        return {"status": "False", "message": "Пользователь уже существует!"}
 
     if 3 > len(username):
-        return jsonify(
-            {"status": "False", "message": "Недопустимое имя пользователя! Минимальная длина имени 3 символа!"})
+        return {"status": "False", "message": "Недопустимое имя пользователя! Минимальная длина имени 3 символа!"}
 
     if len(username) > 15:
-        return jsonify(
-            {"status": "False", "message": "Недопустимое имя пользователя! Максимальная длина имени 15 символов!"})
+        return {"status": "False", "message": "Недопустимое имя пользователя! Максимальная длина имени 15 символов!"}
 
     if ' ' in username:
-        return jsonify({"status": "False",
-                        "message": "Недопустимое имя пользователя! Имя пользователя не может содержать пробелы!"})
+        return {"status": "False",
+                        "message": "Недопустимое имя пользователя! Имя пользователя не может содержать пробелы!"}
 
     try:
         validate_email(email, check_deliverability=True)
 
     except EmailNotValidError:
-        return jsonify({"status": "False", "message": 'E-mail недействителен!'})
+        return {"status": "False", "message": 'E-mail недействителен!'}
 
-    return jsonify({"status": "True", })
+    return {"status": "True", }
 
 
 @app.route('/user/get-user', methods=['POST'])
