@@ -27,7 +27,7 @@ def check_data(password, email, username):
     session = db_session.create_session()
     if session.query(UserInfo).filter(
             (UserInfo.email == email) | (UserInfo.username == username)
-    ) is not None:
+    ).first() is not None:
         return {"status": "False", "message": "Пользователь уже существует!"}
 
     if 3 > len(username):
