@@ -80,8 +80,6 @@ def register():
         session.add(user)
         session.commit()
 
-        '''ОШИБКА ПОИСКА И ОШИБКА СЕРИАЛИЗАЦИИ В JSON'''
-
         user_id = session.query(AuthInfo).filter_by(email=email).first()
 
         user_task = requests.post('http://user-service:5003/user/add-user', headers=headers,
