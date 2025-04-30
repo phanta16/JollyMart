@@ -127,7 +127,7 @@ def change_password():
         session = db_session.create_session()
         req_json = request.get_json()
 
-        id = req_json.get('uid')
+        id = request.headers.get('X-User-Id')
         new_password = req_json.get('new_password')
 
         if not check_data(new_password, 'example@gmail.com', 'XXXXXXXX'):
@@ -156,7 +156,7 @@ def change_email():
         session = db_session.create_session()
         req_json = request.get_json()
 
-        id = req_json.get('uid')
+        id = request.headers.get('X-User-Id')
         new_email = req_json.get('new_email')
 
         if not check_data('example12345', new_email, 'XXXXXXXX'):
@@ -190,8 +190,7 @@ def delete_user():
         headers = dict(request.headers)
 
         session = db_session.create_session()
-        req_json = request.get_json()
-        uid = req_json.get('uid')
+        uid = request.headers.get('X-User-Id')
 
         user_work = requests.post('http://user-service:5003/user/delete-user', headers=headers, json={
 
@@ -230,9 +229,6 @@ def validate_user():
 
         return make_response(jsonify({'status': 'Unknown error!', 'message': str(e)}), 401)
 
-
-'''ДОБАВИТЬ В РОУТЫ AUTH'''
-
 ROUTES = {
 
     "/chat/": "http://chat-service:5001",
@@ -247,10 +243,13 @@ ROUTES = {
 }
 
 
-@app.route("/", defaults={"path": ""}, methods=["GET", "POST", "PATCH", "DELETE"])
-@app.route("/<path:path>", methods=["GET", "POST", "PATCH", "DELETE"])
-def gateway(path):
+@app.before_request
+def gateway():
     session_id = request.cookies.get("session_id")
+    print(request.path)
+
+    if request.path == "/auth/register" or request.path == "/auth/login":
+        return
 
     if not session_id:
         return jsonify({"error": "Non-authorized"
