@@ -71,22 +71,23 @@ def register():
         email = req_json.get('email')
         session_id = secrets.token_hex(16)
 
-        user = AuthInfo(session_id=session_id,
-                        hashed_password=hashlib.sha512(hashed_password.encode('utf-8')).hexdigest(), email=email)
-        session.add(user)
-
-        if not check_data(hashed_password, email, username):
+        if check_data(hashed_password, email, username)["status"] != 'True':
             return make_response(
                 jsonify({"status": "False", "message": check_data(hashed_password, email, username)["message"]}))
 
+        user = AuthInfo(session_id=session_id,
+                        hashed_password=hashlib.sha512(hashed_password.encode('utf-8')).hexdigest(), email=email)
+        session.add(user)
         session.commit()
 
-        user_id = session.query(AuthInfo).filter(AuthInfo.email == email).first()
+        '''ОШИБКА ПОИСКА И ОШИБКА СЕРИАЛИЗАЦИИ В JSON'''
+
+        user_id = session.query(AuthInfo).filter_by(email=email).first()
 
         user_task = requests.post('http://user-service:5003/user/add-user', headers=headers,
-                                  json={'username': username, 'email': email, 'uid': user_id})
+                                  json={'username': username, 'email': email, 'uid': user_id.uid}).json()
 
-        if user_task.json()['status'] == 'True':
+        if user_task['status'] == 'True':
             responce = make_response(jsonify({'status': 'True', }), 200)
             responce.set_cookie('session_id', user.session_id, httponly=True)
             return responce
