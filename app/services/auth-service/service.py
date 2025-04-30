@@ -33,19 +33,15 @@ def check_data(password, email, username):
     ).first() is not None:
         return {"status": "False", "message": "Пользователь уже существует!"}
 
-
     if 3 > len(username):
         return {"status": "False", "message": "Недопустимое имя пользователя! Минимальная длина имени 3 символа!"}
-
 
     if len(username) > 15:
         return {"status": "False", "message": "Недопустимое имя пользователя! Максимальная длина имени 15 символов!"}
 
-
     if ' ' in username:
         return {"status": "False",
                 "message": "Недопустимое имя пользователя! Имя пользователя не может содержать пробелы!"}
-
 
     try:
         validate_email(email, check_deliverability=True)
@@ -121,14 +117,15 @@ def login():
         return make_response(jsonify({'status': 'Something went wrong!', 'message': str(e)}), 404)
 
 
-@app.route('/auth/change_password', methods=['PATCH'])
-def change_password():
+def change_password(uid, new_password, headers):
     try:
-        session = db_session.create_session()
-        req_json = request.get_json()
 
-        id = request.headers.get('X-User-Id')
-        new_password = req_json.get('new_password')
+        headers = dict(headers)
+
+        session = db_session.create_session()
+
+        id = uid
+        new_password = new_password
 
         if not check_data(new_password, 'example@gmail.com', 'XXXXXXXX'):
             return make_response(jsonify(
@@ -147,25 +144,23 @@ def change_password():
         return make_response(jsonify({'status': 'False', 'message': str(e)}), 401)
 
 
-@app.route('/auth/change_email/', methods=['PATCH'])
-def change_email():
+def change_email(uid, new_email, headers):
     try:
 
-        headers = dict(request.headers)
+        headers = dict(headers)
 
         session = db_session.create_session()
-        req_json = request.get_json()
 
-        id = request.headers.get('X-User-Id')
-        new_email = req_json.get('new_email')
+        id = uid
+        new_email = new_email
 
         if not check_data('example12345', new_email, 'XXXXXXXX'):
             return make_response(jsonify(
                 {'status': 'False', 'message': check_data('example12345', new_email, 'XXXXXXXX')["message"]}))
 
-        user_work = requests.post('http://user-service:5003/user/change-email', headers=headers, json={
+        user_work = requests.patch('http://user-service:5003/user/change-email', headers=headers, json={
             "uid": id,
-            "new_email": new_email,
+            "new_mail": new_email,
 
         })
 
@@ -183,16 +178,15 @@ def change_email():
         return make_response(jsonify({'status': 'False', 'message': str(e)}), 401)
 
 
-@app.route('/auth/delete_user/', methods=['DELETE'])
-def delete_user():
+def delete_user(uid, headers):
     try:
 
-        headers = dict(request.headers)
-
         session = db_session.create_session()
-        uid = request.headers.get('X-User-Id')
+        uid = uid
 
-        user_work = requests.post('http://user-service:5003/user/delete-user', headers=headers, json={
+        headers = dict(headers)
+
+        user_work = requests.delete('http://user-service:5003/user/delete-user', headers=headers, json={
 
             "uid": uid,
         })
@@ -261,12 +255,29 @@ def gateway():
 
     uid = user.uid
 
+    if request.path == "/auth/change_email":
+        recp = request.get_json()
+        new_email = recp.get('new_email')
+        headers = request.headers
+        return change_email(uid, new_email, headers)
+
+    if request.path == "/auth/change_password":
+        recp = request.get_json()
+        new_password = recp.get('new_password')
+        headers = request.headers
+        return change_password(uid, new_password, headers)
+
+    if request.path == "/auth/delete_user":
+        headers = request.headers
+        return delete_user(uid, headers)
+
     for prefix, target_url in ROUTES.items():
         if request.path.startswith(prefix):
             service_url = target_url + prefix[:-1] + request.path[len(prefix) - 1:]
             break
     else:
         return jsonify({"error": "Unknown service!"})
+
     headers = dict(request.headers)
     headers["X-User-Id"] = str(uid)
 
