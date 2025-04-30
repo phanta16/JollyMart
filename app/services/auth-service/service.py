@@ -231,7 +231,6 @@ def validate_user():
 
 ROUTES = {
 
-    "/auth/": "http://auth-service:5000",
     "/chat/": "http://chat-service:5001",
     "/comment/": "http://comment-service:5002",
     "/user/": "http://user-service:5003",
@@ -247,7 +246,6 @@ ROUTES = {
 @app.before_request
 def gateway():
     session_id = request.cookies.get("session_id")
-    print(request.path)
 
     if request.path == "/auth/register" or request.path == "/auth/login":
         return
