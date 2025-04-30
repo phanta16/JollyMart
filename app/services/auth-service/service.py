@@ -231,6 +231,7 @@ def validate_user():
 
 ROUTES = {
 
+    "/auth/": "http://auth-service:5000",
     "/chat/": "http://chat-service:5001",
     "/comment/": "http://comment-service:5002",
     "/user/": "http://user-service:5003",
