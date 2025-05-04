@@ -6,7 +6,6 @@ from model import UserInfo
 
 app = Flask(__name__)
 
-
 @app.route('/user/get-user', methods=['POST'])
 def get_user():
     try:
@@ -39,6 +38,9 @@ def get_user():
 @app.route('/user/add-user', methods=['POST'])
 def add_user():
     try:
+
+        headers = dict(request.headers)
+
         session = db_session.create_session()
         req = request.get_json()
 
@@ -82,6 +84,8 @@ def patch_email():
 def delete_user():
     try:
 
+        headers = dict(request.headers)
+
         session = db_session.create_session()
         req = request.get_json()
 
@@ -92,10 +96,18 @@ def delete_user():
         if user is None:
             return jsonify({"status": "False", "message": "Пользователя не существует!"})
 
-        session.delete(user)
-        session.commit()
+        req = requests.post("http://media-service:5005/media/delete-media-user", data={"user_id": uid},
+                            headers=headers).json()
 
-        return jsonify({"status": "True",})
+        if req["status"] == "True":
+
+            session.delete(user)
+            session.commit()
+
+        else:
+            return jsonify({"status": "False", "message": req["message"]})
+
+        return jsonify({"status": "True", })
 
     except Exception as e:
         return jsonify({"status": "False", "message": str(e)})
