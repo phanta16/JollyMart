@@ -45,6 +45,15 @@ services:
     depends_on:
       - auth-service
 
+  media-service:
+    expose:
+      - "5005"
+    networks:
+      - internal
+    build: ./media-service
+    depends_on:
+      - auth-service
+
 networks:
   internal:
     driver: bridge
