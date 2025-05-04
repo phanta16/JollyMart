@@ -13,3 +13,4 @@ class MediaInfo(SqlAlchemyBase, UserMixin, SerializerMixin):
     path = sqlalchemy.Column(sqlalchemy.String)
     post_id = sqlalchemy.Column(sqlalchemy.Integer)
     date = sqlalchemy.Column(sqlalchemy.DateTime)
+    extension = sqlalchemy.Column(sqlalchemy.String)
