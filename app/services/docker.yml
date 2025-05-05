@@ -54,6 +54,15 @@ services:
     depends_on:
       - auth-service
 
+  posts-service:
+    expose:
+      - "5009"
+    networks:
+      - internal
+    build: ./posts-service
+    depends_on:
+      - auth-service
+
 networks:
   internal:
     driver: bridge
