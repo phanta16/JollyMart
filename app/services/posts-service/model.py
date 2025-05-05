@@ -7,7 +7,7 @@ from sqlalchemy_serializer import SerializerMixin
 
 from .db_session import SqlAlchemyBase
 
-class PostInfo(SqlAlchemyBase, UserMixin, SerializerMixin):
+class PostsInfo(SqlAlchemyBase, UserMixin, SerializerMixin):
     __tablename__ = 'posts_info'
     post_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False, autoincrement=True, primary_key=True)
     media = sqlalchemy.Column(sqlalchemy.BLOB, nullable=False)
