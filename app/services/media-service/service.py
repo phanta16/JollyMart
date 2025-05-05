@@ -17,7 +17,7 @@ def get_media_post():
     try:
 
         session = db_session.create_session()
-        reque = request.json
+        reque = request.get_json()
         post_id = reque['post_id']
 
         filename = session.query(MediaPostInfo).filter(MediaPostInfo.post_id == post_id).first()
@@ -32,7 +32,8 @@ def get_media_post():
         return make_response(jsonify({
             "filename": filename.filename,
             "type": extension,
-            "media": encoded_image.decode()
+            "media": encoded_image.decode(),
+            "status": "True",
         }))
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}))
@@ -44,7 +45,7 @@ def get_media_user():
     try:
 
         session = db_session.create_session()
-        reque = request.json
+        reque = request.get_json()
         user_id = reque['user_id']
 
         filename = session.query(MediaUserInfo).filter(MediaUserInfo.user_id == user_id).first()
@@ -59,7 +60,8 @@ def get_media_user():
         return make_response(jsonify({
             "filename": filename.filename,
             "type": extension,
-            "media": encoded_image.decode()
+            "media": encoded_image.decode(),
+            "status": "True",
         }))
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}))
@@ -69,7 +71,7 @@ def add_media_post():
     try:
 
         session = db_session.create_session()
-        reque = request.json
+        reque = request.get_json()
         post_id = reque['post_id']
         name = reque['filename']
 
@@ -98,7 +100,7 @@ def add_media_user():
     try:
 
         session = db_session.create_session()
-        reque = request.json
+        reque = request.get_json()
         user_id = reque['user_id']
         name = reque['filename']
 
@@ -109,10 +111,13 @@ def add_media_user():
 
         filename = str(uuid.uuid4())
 
-        with open(f'avatars/{filename}', 'wb') as image:
-            image.write(base64.b64decode(reque['image']))
+        with open(f'avatars/standart_avatar.jpg', 'rb') as image:
+            encoded_image = base64.b64encode(image.read())
 
-        img = MediaUserInfo(image=base64.b64decode(reque['image']), user_id=user_id, extension=extension,
+        with open(f'avatars/{filename}', 'wb') as image:
+            image.write(base64.b64decode(encoded_image))
+
+        img = MediaUserInfo(image=base64.b64decode(encoded_image), user_id=user_id, extension=extension,
                             filename=filename)
         session.add(img)
         session.commit()
@@ -127,7 +132,7 @@ def delete_media_post():
     try:
         session = db_session.create_session()
 
-        reque = request.json
+        reque = request.get_json()
         post_id = reque['post_id']
 
         image = session.query(MediaPostInfo).filter(MediaPostInfo.post_id == post_id).first()
@@ -151,7 +156,7 @@ def delete_media_user():
     try:
         session = db_session.create_session()
 
-        reque = request.json
+        reque = request.get_json()
         user_id = reque['user_id']
 
         image = session.query(MediaUserInfo).filter(MediaUserInfo.user_id == user_id).first()
@@ -175,7 +180,7 @@ def set_avatar():
     try:
         session = db_session.create_session()
 
-        reque = request.json
+        reque = request.get_json()
         user_id = reque['user_id']
         new_image = reque['new_image']
         name = reque['filename']

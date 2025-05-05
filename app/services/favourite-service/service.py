@@ -19,9 +19,9 @@ def favourite_all():
             'post_id': p.post_id,
 
         }
-            for p in posts]))
+            for p in posts]), 200)
     except Exception as e:
-        return make_response(jsonify({"error": str(e)}))
+        return make_response(jsonify({"error": str(e)}, 400))
 
 
 @app.route('/favourite/new-favourite', methods=['POST'])

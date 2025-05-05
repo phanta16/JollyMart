@@ -13,9 +13,8 @@ def get_user():
         headers = dict(request.headers)
 
         session = db_session.create_session()
-        req = request.get_json()
 
-        uid = req['uid']
+        uid = request.headers.get('X-User-Id')
 
         user = session.query(UserInfo).filter(UserInfo.uid == uid).first()
 
@@ -23,13 +22,23 @@ def get_user():
             return jsonify({"status": "False", "message": "Пользователя не существует!"})
 
         favourites = requests.post("http://favourite-service:5004/favourite/all-favourites",
-                                   json={"user_id": uid}, headers=headers).json()
+                                   json={"user_id": uid}, headers=headers)
+
+        image = requests.post("http://media-service:5005/media/get-media-user", json={"user_id": uid},
+                              headers=headers).json()
+
+        if not image["status"] == 'True':
+            return make_response(jsonify({"status": "False", "message": image["message"]}))
+
+        if not favourites.status_code == 200:
+            return make_response(jsonify({"status": "False", "message": favourites.json()["message"]}))
 
         return make_response(jsonify({"uid": uid,
                                       "username": user.username,
                                       "email": user.email,
                                       "date_joined": user.date_joined,
-                                      "favourite": favourites,
+                                      "favourite": favourites.json(),
+                                      "avatar": image
                                       }), 200)
     except Exception as e:
         return jsonify({"status": "False", "message": str(e)})
@@ -43,10 +52,16 @@ def add_user():
 
         session = db_session.create_session()
         req = request.get_json()
-
         email = req['email']
         username = req['username']
         uid = req["uid"]
+
+        image = requests.post("http://media-service:5005/media/add-media-user",
+                              json={"user_id": uid, "filename": "standart_avatar.jpg"},
+                              headers=headers).json()
+
+        if not image["status"] == 'True':
+            return make_response(jsonify({"status": "False", "message": image["message"]}))
 
         user = UserInfo(username=username, email=email, uid=uid)
         session.add(user)
@@ -74,7 +89,7 @@ def patch_email():
 
         user.email = new_mail
         session.commit()
-        return jsonify({"status": "True",})
+        return jsonify({"status": "True", })
 
     except Exception as e:
         return jsonify({"status": "False", "message": str(e)})

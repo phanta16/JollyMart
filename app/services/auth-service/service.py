@@ -86,7 +86,7 @@ def register():
             responce.set_cookie('session_id', user.session_id, httponly=True)
             return responce
         else:
-            return make_response(jsonify({'status': 'Something went wrong!', 'message': str(user_task.text)}))
+            return make_response(jsonify({'status': 'Something went wrong!', 'message': str(user_task["message"])}))
 
     except Exception as e:
         return make_response(jsonify({'status': 'Something went wrong!', 'message': str(e)}))
@@ -222,6 +222,7 @@ def validate_user():
     except Exception as e:
 
         return make_response(jsonify({'status': 'Unknown error!', 'message': str(e)}), 401)
+
 
 ROUTES = {
 
