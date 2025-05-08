@@ -56,8 +56,8 @@ def delete_favourite():
         post_id = request_data['post_id']
         user_id = str(request.headers['X-User-Id'])
 
-        rate = FavouriteInfo(author_id=user_id, post_id=post_id)
-        if not session.query(FavouriteInfo).filter_by(author_id=user_id, post_id=post_id).all():
+        rate = session.query(FavouriteInfo).filter_by(author_id=user_id, post_id=post_id)
+        if not session.query(FavouriteInfo).filter_by(author_id=user_id, post_id=post_id).first():
             return make_response(jsonify({"success": "False", "message": "Непредвиденная ошибка!"}))
         else:
             session.delete(rate)
