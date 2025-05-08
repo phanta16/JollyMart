@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 
 @app.route('/posts/get-post', methods=['POST'])
-def get_posts():
+def get_post():
     try:
 
         headers = dict(request.headers)
@@ -30,11 +30,42 @@ def get_posts():
             return make_response(jsonify({
                 "status": "True",
                 "post_id": post.post_id,
-                "media": post.media,
+                "media": requests.post('http://media-service:5005/media/get-media-post', headers=headers, json={
+                    "post_id": str(post.post_id)
+
+                    ,
+                }).json(),
                 "text": post.text,
                 "author": author,
                 "date_created": post.date_created,
             }))
+    except Exception as e:
+        return make_response(jsonify({"status": "False", "message": str(e)}), 400)
+
+@app.route('/posts/get-posts', methods=['POST'])
+def get_posts():
+    try:
+        result = []
+
+        session = db_session.create_session()
+        batch_session = request.get_json()
+
+        for reque in batch_session:
+            post = session.query(PostsInfo).filter(PostsInfo.post_id == reque['post_id']).first()
+            if post is None:
+                result.append({
+                    "status": "False",
+                    "message": "Объявления не существует!"
+                })
+            else:
+                result.append({
+                    "status": "True",
+                    "post_id": post.post_id,
+                    "header": post.post_headers,
+                })
+
+        return result
+
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}), 400)
 
@@ -52,6 +83,7 @@ def add_post():
         reque = request.get_json()
 
         text = reque['text']
+        post_headers = reque['post_headers']
         image = reque['image']
         image_name = reque['image_name']
         author_id = request.headers.get('X-User-Id')
@@ -62,7 +94,13 @@ def add_post():
                 "message": "Вы не можете оставить пустое объявление!"
             }))
 
-        post = PostsInfo(text=text, author_id=author_id)
+        if post_headers == '':
+            return make_response(jsonify({
+                "status": "False",
+                "message": "Вы не можете оставить название объявления пустым!"
+            }))
+
+        post = PostsInfo(text=text, author_id=author_id, post_headers=post_headers)
         session.add(post)
         session.commit()
 
@@ -77,9 +115,9 @@ def add_post():
                 session.commit()
                 return make_response(jsonify({"status": "False", "message": media_work["message"]}))
             else:
-                return make_response(jsonify({"status": "True"}))
+                return make_response(jsonify({"status": "True", "post_id": post.post_id}))
         else:
-            return make_response(jsonify({"status": "True"}))
+            return make_response(jsonify({"status": "True", "post_id": post.post_id}))
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}), 400)
 

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Регистрация</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #d41111, #ec690b);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-container {
+            background-color: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        input {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 20px 0;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #message {
+            margin-top: 10px;
+            color: red;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 100px 10px;
+            color: #ffffff;
+        }
+
+        header h1 {
+            font-size: 60px;
+            margin-bottom: 150px;
+            font-weight: bold;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        header p {
+            font-size: 50px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Добро пожаловать в JollyMart!</h1>
+</header>
+<div class="login-container">
+    <h2>Регистрация</h2>
+    <form id="loginForm">
+        <input type="text" id="username" placeholder="Логин" required>
+        <input type="password" id="password" placeholder="Пароль" required>
+        <input type="email" id="email" placeholder="Электронная почта" required>
+        <button type="submit">Войти</button>
+    </form>
+    <p id="message"></p>
+</div>
+</body>
+</html>

@@ -1,4 +1,5 @@
 from flask import request, Flask, make_response, jsonify
+import requests
 
 import db_session
 from model import FavouriteInfo
@@ -8,18 +9,18 @@ app = Flask(__name__)
 
 @app.route('/favourite/all-favourites', methods=['POST'])
 def favourite_all():
+    headers = dict(request.headers)
     request_data = request.get_json()
 
     session = db_session.create_session()
     try:
         user_id = request_data['user_id']
         posts = session.query(FavouriteInfo).filter_by(author_id=user_id).all()
-        return make_response(jsonify([{
+        batch = [{"post_id": i.post_id} for i in posts]
+        post_work = requests.post("http://posts-service:5009/posts/get-posts", headers=headers, json=batch).json()
 
-            'post_id': p.post_id,
+        return make_response(jsonify({"status": "True", "message": post_work}), 200)
 
-        }
-            for p in posts]), 200)
     except Exception as e:
         return make_response(jsonify({"error": str(e)}, 400))
 
@@ -31,7 +32,7 @@ def new_favourite():
 
         session = db_session.create_session()
         post_id = request_data['post_id']
-        user_id = request_data['user_id']
+        user_id = str(request.headers['X-User-Id'])
 
         rate = FavouriteInfo(author_id=user_id, post_id=post_id)
         if not session.query(FavouriteInfo).filter_by(author_id=user_id, post_id=post_id).all():
@@ -40,7 +41,29 @@ def new_favourite():
             return make_response(jsonify({"success": "True"}))
         else:
             return make_response(
-                jsonify({"success": "False", "message": "You have already left favourite on this post!"}))
+                jsonify({"success": "False", "message": "Непредвиденная ошибка!"}))
+
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}))
+
+
+@app.route('/favourite/delete-favourite', methods=['POST'])
+def delete_favourite():
+    try:
+        request_data = request.get_json()
+
+        session = db_session.create_session()
+        post_id = request_data['post_id']
+        user_id = str(request.headers['X-User-Id'])
+
+        rate = FavouriteInfo(author_id=user_id, post_id=post_id)
+        if not session.query(FavouriteInfo).filter_by(author_id=user_id, post_id=post_id).all():
+            return make_response(jsonify({"success": "False", "message": "Непредвиденная ошибка!"}))
+        else:
+            session.delete(rate)
+            session.commit()
+            return make_response(
+                jsonify({"success": "True", }))
 
     except Exception as e:
         return make_response(jsonify({"error": str(e)}))
