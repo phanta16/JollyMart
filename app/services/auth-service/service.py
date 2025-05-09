@@ -1,4 +1,5 @@
 import hashlib
+import json
 import secrets
 
 import requests
@@ -57,14 +58,16 @@ def check_data(password, email, username):
 def register():
     try:
 
-        headers = dict(request.headers)
-
         session = db_session.create_session()
-        req_json = request.get_json()
+        file = request.files['image']
 
-        username = req_json['username']
-        hashed_password = req_json.get('password')
-        email = req_json.get('email')
+        files = {
+            "image": (file.filename, file.stream, file.content_type),
+                }
+
+        username = request.form['username']
+        hashed_password = request.form['password']
+        email = request.form['email']
         session_id = secrets.token_hex(16)
 
         if check_data(hashed_password, email, username)["status"] != 'True':
@@ -78,15 +81,21 @@ def register():
 
         user_id = session.query(AuthInfo).filter_by(email=email).first()
 
-        user_task = requests.post('http://user-service:5003/user/add-user', headers=headers,
-                                  json={'username': username, 'email': email, 'uid': user_id.uid}).json()
+        metadata = {'username': username,
+                    'email': email,
+                    'uid': user_id.uid}
+
+        user_task = requests.post('http://user-service:5003/user/add-user',
+                                  data={"metadata": json.dumps(metadata)}, files=files).json()
 
         if user_task['status'] == 'True':
             responce = make_response(jsonify({'status': 'True', }), 200)
             responce.set_cookie('session_id', user.session_id, httponly=True)
             return responce
         else:
-            return make_response(jsonify({'status': 'Something went wrong!', 'message': str(user_task["message"])}))
+            session.delete(user)
+            session.commit()
+            return make_response(jsonify({'status': 'Error!', 'message': str(user_task["message"])}))
 
     except Exception as e:
         return make_response(jsonify({'status': 'Something went wrong!', 'message': str(e)}))
@@ -119,8 +128,6 @@ def login():
 
 def change_password(uid, new_password, headers):
     try:
-
-        headers = dict(headers)
 
         session = db_session.create_session()
 
@@ -281,6 +288,29 @@ def gateway():
 
     headers = dict(request.headers)
     headers["X-User-Id"] = str(uid)
+
+    # if request.content_type == 'multipart/form-data':
+    #     files = request.files
+    #     json_data = json.dumps(dict(request.form['metadata']))
+    #     try:
+    #         response = requests.request(
+    #             method=request.method,
+    #             url=service_url,
+    #             headers=headers,
+    #             params=request.args,
+    #             json=json_data,
+    #             files=files,
+    #         )
+    #     except requests.exceptions.RequestException as e:
+    #         return jsonify({"error": "Service unavailable!", "detail": str(e)})
+    #
+    #     f_response = make_response(response.content, response.status_code)
+    #     excluded = ['Content-Encoding', 'Transfer-Encoding', 'Connection', 'Content-Length']
+    #     for name, value in headers.items():
+    #         if name not in excluded:
+    #             f_response.headers[name] = value
+    #
+    #     return f_response
 
     try:
         response = requests.request(

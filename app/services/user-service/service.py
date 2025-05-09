@@ -1,5 +1,6 @@
 import requests
 from flask import Flask, request, jsonify, make_response
+import json
 
 import db_session
 from model import UserInfo
@@ -24,9 +25,6 @@ def get_user():
         favourites = requests.post("http://favourite-service:5004/favourite/all-favourites",
                                    json={"user_id": uid}, headers=headers)
 
-        image = requests.post("http://media-service:5005/media/get-media-user", json={"user_id": uid},
-                              headers=headers).json()
-
         if not image["status"] == 'True':
             return make_response(jsonify({"status": "False", "message": image["message"]}))
 
@@ -38,7 +36,7 @@ def get_user():
                                       "email": user.email,
                                       "date_joined": user.date_joined,
                                       "favourite": favourites.json(),
-                                      "avatar": image
+                                      "avatar_path": os.join('images', user.avatar),
                                       }), 200)
     except Exception as e:
         return jsonify({"status": "False", "message": str(e)})
@@ -48,22 +46,27 @@ def get_user():
 def add_user():
     try:
 
-        headers = dict(request.headers)
-
         session = db_session.create_session()
-        req = request.get_json()
-        email = req['email']
-        username = req['username']
-        uid = req["uid"]
+        metadata = json.loads(request.form.get('metadata'))
+        username = metadata['username']
+        email = metadata['email']
+        uid = metadata['uid']
+        file = request.files.get('image')
 
-        image = requests.post("http://media-service:5005/media/add-media-user",
-                              json={"user_id": uid, "filename": "standart_avatar.jpg"},
-                              headers=headers).json()
+        if request.files.get('image') is None:
+            return make_response(jsonify({"status": "False", "message": "Пожалуйста, выберите себе аватар!"}))
+
+        files = {
+            "image": (file.filename, file.stream, file.content_type),
+                }
+
+        image = requests.post("http://media-service:5005/media/add-image",
+                              files=files).json()
 
         if not image["status"] == 'True':
             return make_response(jsonify({"status": "False", "message": image["message"]}))
 
-        user = UserInfo(username=username, email=email, uid=uid)
+        user = UserInfo(username=username, email=email, uid=uid, avatar=image["filename"])
         session.add(user)
         session.commit()
 
@@ -111,8 +114,7 @@ def delete_user():
         if user is None:
             return jsonify({"status": "False", "message": "Пользователя не существует!"})
 
-        req = requests.post("http://media-service:5005/media/delete-media-user", data={"user_id": uid},
-                            headers=headers).json()
+        req = requests.post(f"http://media-service:5005/media/delete-image/{user.avatar}", headers=headers).json()
 
         if req["status"] == "True":
 
@@ -122,7 +124,7 @@ def delete_user():
         else:
             return jsonify({"status": "False", "message": req["message"]})
 
-        return jsonify({"status": "True", })
+        return jsonify({"status": "True"})
 
     except Exception as e:
         return jsonify({"status": "False", "message": str(e)})
