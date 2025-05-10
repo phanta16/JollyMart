@@ -238,9 +238,6 @@ ROUTES = {
     "/user/": "http://user-service:5003",
     "/favourite/": "http://favourite-service:5004",
     "/media/": "http://media-service:5005",
-    "/notifications/": "http://notifications-service:5006",
-    "/recommendations/": "http://recommendations-service:5007",
-    "/search/": "http://search-service:5008",
     "/posts/": "http://posts-service:5009",
 }
 
