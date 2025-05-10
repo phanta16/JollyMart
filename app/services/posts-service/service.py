@@ -1,6 +1,7 @@
+import os
+
 import requests
 from flask import Flask, request, jsonify, make_response
-import os
 
 import db_session
 from model import PostsInfo
@@ -20,6 +21,10 @@ def get_post(post_id):
         if post is None:
             return make_response(jsonify({"status": "False", "message": "Поста не существует!"}), 404)
         else:
+            comment_work = requests.post("http://comment-service:5002/comment/all-comments",
+                                         json={"post_id": post.post_id}, headers=headers)
+            if comment_work.status_code != 200:
+                return make_response(jsonify({"status": "False", "message": 'Непредвиденная ошибка!'}))
 
             host = 'True' if str(headers['X-User-Id']) == post.author_id else 'False'
 
@@ -33,7 +38,9 @@ def get_post(post_id):
                 "author_username": post.author_username,
                 "author_image": post.author_image,
                 "date_created": post.date_created,
+                "comments": comment_work.json()
             }))
+
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}), 400)
 
@@ -46,16 +53,16 @@ def all_posts():
         posts = session.query(PostsInfo).all()
 
         return make_response(jsonify([{
-                                         "post_id": post.post_id,
-                                         "date_created": post.date_created,
-                                         "author_id": post.author_id,
-                                         "author_username": post.author_username,
-                                         "author_image": post.author_image,
-                                         "text": post.text,
-                                         "image_name": post.image_name,
-                                         "post_headers": post.post_headers,
+            "post_id": post.post_id,
+            "date_created": post.date_created,
+            "author_id": post.author_id,
+            "author_username": post.author_username,
+            "author_image": post.author_image,
+            "text": post.text,
+            "image_name": post.image_name,
+            "post_headers": post.post_headers,
 
-                                    } for post in posts]))
+        } for post in posts]))
 
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}), 400)

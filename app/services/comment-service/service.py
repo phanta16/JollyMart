@@ -28,18 +28,20 @@ def all_comments():
 
         }
             for c in comments]))
+
     except Exception as e:
-        return make_response(jsonify({"error": str(e)}))
+        return make_response(jsonify({"status": "False", "message": str(e)}))
 
 
 @app.route('/comment/new-comment', methods=['POST'])
 def new_comment():
     try:
         request_data = request.get_json()
+        headers = dict(request.headers)
 
         session = db_session.create_session()
         post_id = request_data['post_id']
-        comment_author_id = request_data['comment_author_id']
+        comment_author_id = headers.get('X-User-Id')
         context = request_data['context']
 
         user_work = requests.get('http://user-service:5003/user/get-user', headers=headers).json()
@@ -51,10 +53,10 @@ def new_comment():
                                  comment_author_image=user_work["avatar_path"])
         session.add(comment)
         session.commit()
-        return make_response(jsonify({"success": "True"}))
+        return make_response(jsonify({"status": "True"}))
 
     except Exception as e:
-        return make_response(jsonify({"error": str(e)}))
+        return make_response(jsonify({"status": "False", "message": str(e)}))
 
 
 @app.route('/comment/delete-comment', methods=['DELETE'])
@@ -71,10 +73,10 @@ def delete_comment():
                                                           context=timestamp).first()
         session.delete(comment)
         session.commit()
-        return make_response(jsonify({"success": "True"}))
+        return make_response(jsonify({"status": "True"}))
 
     except Exception as e:
-        return make_response(jsonify({"error": str(e)}))
+        return make_response(jsonify({"status": "False", "message": str(e)}))
 
 
 @app.route('/comment/change-comment', methods=['PATCH'])
@@ -92,10 +94,10 @@ def change_comment():
                                                           context=timestamp).first()
         comment.context = new_context
         session.commit()
-        return make_response(jsonify({"success": "True"}))
+        return make_response(jsonify({"status": "True"}))
 
     except Exception as e:
-        return make_response(jsonify({"error": str(e)}))
+        return make_response(jsonify({"status": "False", "message": str(e)}))
 
 
 db_session.global_init('db/JollyCommentDB.db')
