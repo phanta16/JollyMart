@@ -1,5 +1,7 @@
 import os
+from importlib.metadata import pass_none
 
+import rapidfuzz
 import requests
 from flask import Flask, request, jsonify, make_response
 
@@ -112,6 +114,29 @@ def add_post():
         return make_response(jsonify({"status": "True", "post_id": post.post_id}))
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}), 400)
+
+
+@app.route('/posts/search-post/<post_name>', methods=['POST'])
+def search_post(post_name):
+    session = db_session.create_session()
+
+    posts = session.query(PostsInfo).all()
+
+    score = [(pre, rapidfuzz.fuzz.ratio(post_name, pre.post_headers)) for pre in posts if
+             rapidfuzz.fuzz.ratio(post_name,
+                                  pre.post_headers) > 70]
+
+    return make_response(jsonify([{
+                                      "post_id": post[0].post_id,
+                                      "date_created": post[0].date_created,
+                                      "author_id": post[0].author_id,
+                                      "author_username": post[0].author_username,
+                                      "author_image": post[0].author_image,
+                                      "text": post[0].text,
+                                      "image_name": post[0].image_name,
+                                      "post_headers": post[0].post_headers,
+
+                                  } for post in score[:10]]))
 
 
 @app.route('/posts/delete-post', methods=['POST'])
