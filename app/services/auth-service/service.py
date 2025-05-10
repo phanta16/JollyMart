@@ -286,31 +286,67 @@ def gateway():
     else:
         return jsonify({"error": "Unknown service!"})
 
-    headers = dict(request.headers)
+    headers = {k: v for k, v in request.headers if k.lower() not in [
+        'host', 'connection', 'content-length', 'keep-alive',
+        'proxy-authenticate', 'proxy-authorization', 'te',
+        'trailers', 'transfer-encoding', 'upgrade'
+    ]}
+
     headers["X-User-Id"] = str(uid)
 
-    # if request.content_type == 'multipart/form-data':
-    #     files = request.files
-    #     json_data = json.dumps(dict(request.form['metadata']))
-    #     try:
-    #         response = requests.request(
-    #             method=request.method,
-    #             url=service_url,
-    #             headers=headers,
-    #             params=request.args,
-    #             json=json_data,
-    #             files=files,
-    #         )
-    #     except requests.exceptions.RequestException as e:
-    #         return jsonify({"error": "Service unavailable!", "detail": str(e)})
-    #
-    #     f_response = make_response(response.content, response.status_code)
-    #     excluded = ['Content-Encoding', 'Transfer-Encoding', 'Connection', 'Content-Length']
-    #     for name, value in headers.items():
-    #         if name not in excluded:
-    #             f_response.headers[name] = value
-    #
-    #     return f_response
+    if request.content_type == 'application/json':
+        try:
+            response = requests.request(
+                method=request.method,
+                url=service_url,
+                headers=headers,
+                params=request.args,
+                json=request.get_json(silent=True)
+            )
+        except requests.exceptions.RequestException as e:
+            return jsonify({"error": "Service unavailable!", "detail": str(e)})
+        f_response = make_response(response.content, response.status_code)
+        excluded = [
+            'host', 'connection', 'content-length', 'keep-alive',
+            'proxy-authenticate', 'proxy-authorization', 'te',
+            'trailers', 'transfer-encoding', 'upgrade'
+        ]
+        for name, value in headers.items():
+            if name.lower() not in excluded:
+                f_response.headers[name] = value
+
+        return f_response
+
+
+    if request.content_type == 'multipart/form-data':
+        headers = {k: v for k, v in request.headers if k.lower() not in [
+            'host', 'connection', 'content-length', 'keep-alive',
+            'proxy-authenticate', 'proxy-authorization', 'te',
+            'trailers', 'transfer-encoding', 'upgrade', 'content-type'
+        ]}
+        files = {
+            key: (file.filename, file.stream, file.content_type)
+            for key, file in request.files.items()
+        }
+        try:
+            response = requests.request(
+                method=request.method,
+                url=service_url,
+                headers=headers,
+                data=request.form,
+                params=request.args,
+                files=files,
+            )
+        except requests.exceptions.RequestException as e:
+            return jsonify({"error": "Service unavailable!", "detail": str(e)})
+
+        f_response = make_response(response.content, response.status_code)
+        excluded = ['content-encoding', 'transfer-encoding', 'connection']
+        for name, value in headers.items():
+            if name.lower() not in excluded:
+                f_response.headers[name] = value
+
+        return f_response
 
     try:
         response = requests.request(
@@ -318,14 +354,18 @@ def gateway():
             url=service_url,
             headers=headers,
             params=request.args,
-            json=request.get_json(silent=True)
+            data=request.get_data()
         )
     except requests.exceptions.RequestException as e:
         return jsonify({"error": "Service unavailable!", "detail": str(e)})
     f_response = make_response(response.content, response.status_code)
-    excluded = ['Content-Encoding', 'Transfer-Encoding', 'Connection', 'Content-Length']
+    excluded = [
+        'host', 'connection', 'content-length', 'keep-alive',
+        'proxy-authenticate', 'proxy-authorization', 'te',
+        'trailers', 'transfer-encoding', 'upgrade'
+                ]
     for name, value in headers.items():
-        if name not in excluded:
+        if name.lower() not in excluded:
             f_response.headers[name] = value
 
     return f_response

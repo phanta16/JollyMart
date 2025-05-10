@@ -25,9 +25,6 @@ def get_user():
         favourites = requests.post("http://favourite-service:5004/favourite/all-favourites",
                                    json={"user_id": uid}, headers=headers)
 
-        if not image["status"] == 'True':
-            return make_response(jsonify({"status": "False", "message": image["message"]}))
-
         if not favourites.status_code == 200:
             return make_response(jsonify({"status": "False", "message": favourites.json()["message"]}))
 
@@ -54,7 +51,7 @@ def add_user():
         file = request.files.get('image')
 
         if request.files.get('image') is None:
-            return make_response(jsonify({"status": "False", "message": "Пожалуйста, выберите себе аватар!"}))
+            return make_response(jsonify({"status": "False", "message": "Пожалуйста, выберите аватар!"}))
 
         files = {
             "image": (file.filename, file.stream, file.content_type),
@@ -71,6 +68,36 @@ def add_user():
         session.commit()
 
         return make_response(jsonify({"status": "True"}))
+    except Exception as e:
+        return make_response(jsonify({"status": "False", "message": str(e)}))
+
+@app.route('/user/set-avatar', methods=['POST'])
+def set_avatar():
+    try:
+        session = db_session.create_session()
+        user_id = request.headers.get('X-User-Id')
+
+        user = session.query(UserInfo).filter(UserInfo.uid == user_id).first()
+        if user is None:
+            return jsonify({"status": "False", "message": "Пользователя не существует!"})
+
+        file = request.files.get('image')
+
+        if request.files.get('image') is None:
+            return make_response(jsonify({"status": "False", "message": "Пожалуйста, выберите картинку!"}))
+
+        files = {
+            "image": (file.filename, file.stream, file.content_type),
+        }
+
+        image = requests.post(f"http://media-service:5005/media/set-image/{user.avatar}",
+                          files=files).json()
+
+        if not image["status"] == 'True':
+            return make_response(jsonify({"status": "False", "message": image["message"]}))
+
+        return make_response(jsonify({"status": "True"}))
+
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}))
 
