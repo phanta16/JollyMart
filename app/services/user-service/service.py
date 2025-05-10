@@ -1,6 +1,7 @@
 import requests
 from flask import Flask, request, jsonify, make_response
 import json
+import os
 
 import db_session
 from model import UserInfo
@@ -10,8 +11,6 @@ app = Flask(__name__)
 @app.route('/user/get-user', methods=['GET'])
 def get_user():
     try:
-
-        headers = dict(request.headers)
 
         session = db_session.create_session()
 
@@ -23,7 +22,7 @@ def get_user():
             return jsonify({"status": "False", "message": "Пользователя не существует!"})
 
         favourites = requests.post("http://favourite-service:5004/favourite/all-favourites",
-                                   json={"user_id": uid}, headers=headers)
+                                   json={"user_id": uid})
 
         if not favourites.status_code == 200:
             return make_response(jsonify({"status": "False", "message": favourites.json()["message"]}))
@@ -33,7 +32,7 @@ def get_user():
                                             "email": user.email,
                                             "date_joined": user.date_joined,
                                             "favourite": favourites.json(),
-                                            "avatar_path": os.join('images', user.avatar),
+                                            "avatar_path": os.path.join('images', user.avatar),
                                             "status": 'True',
                                             }), 200)
     except Exception as e:

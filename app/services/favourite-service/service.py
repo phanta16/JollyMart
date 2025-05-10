@@ -1,4 +1,6 @@
 from flask import request, Flask, make_response, jsonify
+import requests
+import os
 
 import db_session
 from model import FavouriteInfo
@@ -15,11 +17,11 @@ def favourite_all():
         user_id = request_data['user_id']
         posts = session.query(FavouriteInfo).filter_by(author_id=user_id).all()
 
-        return make_response(jsonify({"status": "True",
+        return make_response(jsonify([{"status": "True",
                                       "post_header": p.post_header,
                                       "post_image": p.post_image,
                                       "post_id": p.post_id}
-                                     for p in posts), 200)
+                                       for p in posts]), 200)
 
     except Exception as e:
         return make_response(jsonify({"error": str(e)}, 400))

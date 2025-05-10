@@ -1,5 +1,6 @@
 import requests
 from flask import Flask, request, jsonify, make_response
+import os
 
 import db_session
 from model import PostsInfo
@@ -7,7 +8,7 @@ from model import PostsInfo
 app = Flask(__name__)
 
 
-@app.route('/posts/<post_id>', methods=['GET'])
+@app.route('/posts/get-post/<post_id>', methods=['GET'])
 def get_post(post_id):
     try:
 
@@ -26,7 +27,7 @@ def get_post(post_id):
                 "status": "True",
                 "post_id": post.post_id,
                 "post_header": post.post_headers,
-                "media_url": os.join('images', post.image_name),
+                "media_url": os.path.join('images', post.image_name),
                 "host": host,
                 "text": post.text,
                 "author_username": post.author_username,
@@ -44,7 +45,7 @@ def all_posts():
         session = db_session.create_session()
         posts = session.query(PostsInfo).all()
 
-        return make_response(jsonify({
+        return make_response(jsonify([{
                                          "post_id": post.post_id,
                                          "date_created": post.date_created,
                                          "author_id": post.author_id,
@@ -54,7 +55,7 @@ def all_posts():
                                          "image_name": post.image_name,
                                          "post_headers": post.post_headers,
 
-                                    } for post in posts))
+                                    } for post in posts]))
 
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}), 400)
@@ -88,14 +89,11 @@ def add_post():
                 "message": "Вы не можете оставить название объявления пустым!"
             }))
 
-        if image != '':
-            return make_response(jsonify({"status": "False", "message": "Вы должны прикрепить картинку!"}))
-
         user_work = requests.get('http://user-service:5003/user/get-user', headers=headers).json()
         if not user_work["status"] == 'True':
             return make_response(jsonify({"status": "False", "message": user_work["message"]}))
 
-        media_work = requests.post("http://media-service:5005/media/add-image", headers=headers, files=files).json()
+        media_work = requests.post("http://media-service:5005/media/add-image", files=files).json()
         if not media_work["status"] == 'True':
             return make_response(jsonify({"status": "False", "message": media_work["message"]}))
 
