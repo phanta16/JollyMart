@@ -1,5 +1,4 @@
 import requests
-import base64
 from flask import Flask, request, jsonify, make_response
 
 import db_session
@@ -8,84 +7,73 @@ from model import PostsInfo
 app = Flask(__name__)
 
 
-@app.route('/posts/get-post', methods=['POST'])
-def get_post():
+@app.route('/posts/<post_id>', methods=['GET'])
+def get_post(post_id):
     try:
 
         headers = dict(request.headers)
 
         session = db_session.create_session()
-        reque = request.get_json()
-
-        post_id = reque['post_id']
 
         post = session.query(PostsInfo).filter(PostsInfo.post_id == post_id).first()
         if post is None:
             return make_response(jsonify({"status": "False", "message": "Поста не существует!"}), 404)
         else:
 
-            headers['X-User-Id'] = str(post.author_id)
-            author = requests.post('http://user-service:5003/user/get-user', headers=headers).json()
+            host = 'True' if str(headers['X-User-Id']) == post.author_id else 'False'
 
             return make_response(jsonify({
                 "status": "True",
                 "post_id": post.post_id,
-                "media": requests.post('http://media-service:5005/media/get-media-post', headers=headers, json={
-                    "post_id": str(post.post_id)
-
-                    ,
-                }).json(),
+                "post_header": post.post_headers,
+                "media_url": os.join('images', post.image_name),
+                "host": host,
                 "text": post.text,
-                "author": author,
+                "author_username": post.author_username,
+                "author_image": post.author_image,
                 "date_created": post.date_created,
             }))
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}), 400)
 
-@app.route('/posts/get-posts', methods=['POST'])
-def get_posts():
+
+@app.route('/posts/all-posts', methods=['POST'])
+def all_posts():
     try:
-        result = []
 
         session = db_session.create_session()
-        batch_session = request.get_json()
+        posts = session.query(PostsInfo).all()
 
-        for reque in batch_session:
-            post = session.query(PostsInfo).filter(PostsInfo.post_id == reque['post_id']).first()
-            if post is None:
-                result.append({
-                    "status": "False",
-                    "message": "Объявления не существует!"
-                })
-            else:
-                result.append({
-                    "status": "True",
-                    "post_id": post.post_id,
-                    "header": post.post_headers,
-                })
+        return make_response(jsonify({
+                                         "post_id": post.post_id,
+                                         "date_created": post.date_created,
+                                         "author_id": post.author_id,
+                                         "author_username": post.author_username,
+                                         "author_image": post.author_image,
+                                         "text": post.text,
+                                         "image_name": post.image_name,
+                                         "post_headers": post.post_headers,
 
-        return result
+                                    } for post in posts))
 
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}), 400)
 
-@app.route('/posts/all-posts', methods=['POST'])
-def all_posts():
-    pass
 
 @app.route('/posts/add-post', methods=['POST'])
 def add_post():
-
     try:
         headers = dict(request.headers)
-
         session = db_session.create_session()
-        reque = request.get_json()
-
+        reque = dict(request.form)
         text = reque['text']
         post_headers = reque['post_headers']
-        image = reque['image']
-        image_name = reque['image_name']
+
+        files = {
+            key: (file.filename, file.stream, file.content_type)
+            for key, file in request.files.items()
+        }
+
         author_id = request.headers.get('X-User-Id')
 
         if text == '':
@@ -100,32 +88,26 @@ def add_post():
                 "message": "Вы не можете оставить название объявления пустым!"
             }))
 
-        post = PostsInfo(text=text, author_id=author_id, post_headers=post_headers)
+        if image != '':
+            return make_response(jsonify({"status": "False", "message": "Вы должны прикрепить картинку!"}))
+
+        user_work = requests.get('http://user-service:5003/user/get-user', headers=headers).json()
+        if not user_work["status"] == 'True':
+            return make_response(jsonify({"status": "False", "message": user_work["message"]}))
+
+        media_work = requests.post("http://media-service:5005/media/add-image", headers=headers, files=files).json()
+        if not media_work["status"] == 'True':
+            return make_response(jsonify({"status": "False", "message": media_work["message"]}))
+
+        post = PostsInfo(text=text, author_id=author_id, post_headers=post_headers,
+                         image_name=media_work["filename"], author_username=user_work["username"],
+                         author_image=user_work["avatar_path"])
         session.add(post)
         session.commit()
-
-        if image != '' and image_name != '':
-            media_work = requests.post("http://media-service:5005/media/add-media-post", headers=headers, json={
-                "filename": image_name,
-                "image": image,
-                "post_id": post.post_id,
-            }).json()
-            if not media_work["status"] == 'True':
-                session.delete(post)
-                session.commit()
-                return make_response(jsonify({"status": "False", "message": media_work["message"]}))
-            else:
-                return make_response(jsonify({"status": "True", "post_id": post.post_id}))
-        else:
-            return make_response(jsonify({"status": "True", "post_id": post.post_id}))
+        return make_response(jsonify({"status": "True", "post_id": post.post_id}))
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}), 400)
 
-
-
-@app.route('/posts/update-post', methods=['POST'])
-def update_post():
-    pass
 
 @app.route('/posts/delete-post', methods=['POST'])
 def delete_post():
@@ -137,14 +119,13 @@ def delete_post():
         reque = request.get_json()
 
         post_id = reque['post_id']
-
         post = session.query(PostsInfo).filter(PostsInfo.post_id == post_id).first()
+
         if post is None:
             return make_response(jsonify({"status": "False", "message": "Поста не существует!"}), 404)
         else:
-
-            work = requests.post('http://media-service:5005/media/delete-media-post', headers=headers,
-                          json={"post_id": post_id}).json()
+            work = requests.post(f'http://media-service:5005/media/delete-image/{post.image_name}',
+                                 headers=headers).json()
 
             if work["status"] != "True":
                 return make_response(jsonify({"status": "False", "message": work["message"]}), 404)

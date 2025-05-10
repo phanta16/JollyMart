@@ -12,5 +12,8 @@ class PostsInfo(SqlAlchemyBase, UserMixin, SerializerMixin):
     post_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False, autoincrement=True, primary_key=True)
     date_created = sqlalchemy.Column(sqlalchemy.DateTime, nullable=False, default=datetime.datetime.now)
     author_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
+    author_username = sqlalchemy.Column(sqlalchemy.String, nullable=False)
+    author_image = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     text = sqlalchemy.Column(sqlalchemy.String, nullable=False)
+    image_name = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     post_headers = sqlalchemy.Column(sqlalchemy.String, nullable=False)

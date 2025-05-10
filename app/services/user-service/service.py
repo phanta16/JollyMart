@@ -7,7 +7,7 @@ from model import UserInfo
 
 app = Flask(__name__)
 
-@app.route('/user/get-user', methods=['POST'])
+@app.route('/user/get-user', methods=['GET'])
 def get_user():
     try:
 
@@ -29,12 +29,13 @@ def get_user():
             return make_response(jsonify({"status": "False", "message": favourites.json()["message"]}))
 
         return make_response(jsonify({"uid": uid,
-                                      "username": user.username,
-                                      "email": user.email,
-                                      "date_joined": user.date_joined,
-                                      "favourite": favourites.json(),
-                                      "avatar_path": os.join('images', user.avatar),
-                                      }), 200)
+                                            "username": user.username,
+                                            "email": user.email,
+                                            "date_joined": user.date_joined,
+                                            "favourite": favourites.json(),
+                                            "avatar_path": os.join('images', user.avatar),
+                                            "status": 'True',
+                                            }), 200)
     except Exception as e:
         return jsonify({"status": "False", "message": str(e)})
 
