@@ -1,3 +1,4 @@
+import requests
 from flask import request, Flask, make_response, jsonify
 
 import db_session
@@ -22,6 +23,8 @@ def all_comments():
             'post_id': c.post_id,
             'context': c.context,
             'datestamp': c.timestamp,
+            'comment_author_username': c.comment_author_username,
+            'comment_author_image': c.comment_author_image,
 
         }
             for c in comments]))
@@ -39,7 +42,13 @@ def new_comment():
         comment_author_id = request_data['comment_author_id']
         context = request_data['context']
 
-        comment = CommentaryInfo(comment_author_id=comment_author_id, post_id=post_id, context=context)
+        user_work = requests.get('http://user-service:5003/user/get-user', headers=headers).json()
+        if not user_work["status"] == 'True':
+            return make_response(jsonify({"status": "False", "message": user_work["message"]}))
+
+        comment = CommentaryInfo(comment_author_id=comment_author_id, post_id=post_id, context=context,
+                                 comment_author_username=user_work["username"],
+                                 comment_author_image=user_work["avatar_path"])
         session.add(comment)
         session.commit()
         return make_response(jsonify({"success": "True"}))
@@ -48,7 +57,7 @@ def new_comment():
         return make_response(jsonify({"error": str(e)}))
 
 
-@app.route('/comment/del-comment', methods=['DELETE'])
+@app.route('/comment/delete-comment', methods=['DELETE'])
 def delete_comment():
     request_data = request.get_json()
 
@@ -57,9 +66,9 @@ def delete_comment():
     try:
         post_id = request_data['post_id']
         comment_author_id = request_data['comment_author_id']
-        context = request_data['context']
+        timestamp = request_data['timestamp']
         comment = session.query(CommentaryInfo).filter_by(comment_author_id=comment_author_id, post_id=post_id,
-                                                          context=context).first()
+                                                          context=timestamp).first()
         session.delete(comment)
         session.commit()
         return make_response(jsonify({"success": "True"}))
@@ -77,10 +86,10 @@ def change_comment():
     try:
         post_id = request_data['post_id']
         comment_author_id = request_data['comment_author_id']
-        context = request_data['context']
+        timestamp = request_data['timestamp']
         new_context = request_data['new_context']
         comment = session.query(CommentaryInfo).filter_by(comment_author_id=comment_author_id, post_id=post_id,
-                                                          context=context).first()
+                                                          context=timestamp).first()
         comment.context = new_context
         session.commit()
         return make_response(jsonify({"success": "True"}))

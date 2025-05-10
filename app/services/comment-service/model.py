@@ -12,5 +12,7 @@ class CommentaryInfo(SqlAlchemyBase, UserMixin, SerializerMixin):
     comment_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False, primary_key=True, autoincrement=True)
     post_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
     comment_author_id = sqlalchemy.Column(sqlalchemy.String, nullable=False)
+    comment_author_username = sqlalchemy.Column(sqlalchemy.String, nullable=False)
+    comment_author_image = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     context = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     timestamp = sqlalchemy.Column(sqlalchemy.DateTime, nullable=False, default=datetime.datetime.now())
