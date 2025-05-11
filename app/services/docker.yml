@@ -3,11 +3,11 @@ version: '3.8'
 services:
 
   auth-service:
-    ports:
-      - "5000:5000"
+    expose:
+      - "5007"
     networks:
       - internal
-    build: ./auth-service/
+    build: ./auth-service
 
   chat-service:
     expose:
@@ -60,6 +60,15 @@ services:
     networks:
       - internal
     build: ./posts-service
+    depends_on:
+      - auth-service
+
+  view-service:
+    ports:
+      - "5000:5000"
+    networks:
+      - internal
+    build: ./view-service
     depends_on:
       - auth-service
 

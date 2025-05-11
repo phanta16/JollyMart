@@ -24,7 +24,7 @@ def favourite_all():
                                        for p in posts]), 200)
 
     except Exception as e:
-        return make_response(jsonify({"error": str(e)}, 400))
+        return make_response(jsonify({"status": "False", "message": str(e)}, 400))
 
 
 @app.route('/favourite/new-favourite', methods=['POST'])
@@ -45,16 +45,16 @@ def new_favourite():
             if not session.query(FavouriteInfo).filter_by(author_id=user_id, post_id=post_id).all():
                 session.add(rate)
                 session.commit()
-                return make_response(jsonify({"success": "True"}))
+                return make_response(jsonify({"status": "True"}))
             else:
                 return make_response(
-                    jsonify({"success": "False", "message": "Непредвиденная ошибка!"}))
+                    jsonify({"status": "False", "message": "Непредвиденная ошибка!"}))
         else:
             return make_response(
-                jsonify({"success": "False", "message": post_info['message']}))
+                jsonify({"status": "False", "message": post_info['message']}))
 
     except Exception as e:
-        return make_response(jsonify({"error": str(e)}))
+        return make_response(jsonify({"status": "False", "message": str(e)}, 400))
 
 
 @app.route('/favourite/delete-favourite', methods=['POST'])
@@ -68,12 +68,12 @@ def delete_favourite():
 
         rate = session.query(FavouriteInfo).filter_by(author_id=user_id, post_id=post_id)
         if not session.query(FavouriteInfo).filter_by(author_id=user_id, post_id=post_id).first():
-            return make_response(jsonify({"success": "False", "message": "Непредвиденная ошибка!"}))
+            return make_response(jsonify({"status": "False", "message": "Непредвиденная ошибка!"}))
         else:
             session.delete(rate)
             session.commit()
             return make_response(
-                jsonify({"success": "True", }))
+                jsonify({"status": "True", }))
 
     except Exception as e:
         return make_response(jsonify({"error": str(e)}))

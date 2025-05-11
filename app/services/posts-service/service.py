@@ -118,25 +118,29 @@ def add_post():
 
 @app.route('/posts/search-post/<post_name>', methods=['POST'])
 def search_post(post_name):
-    session = db_session.create_session()
+    try:
 
-    posts = session.query(PostsInfo).all()
+        session = db_session.create_session()
 
-    score = [(pre, rapidfuzz.fuzz.ratio(post_name, pre.post_headers)) for pre in posts if
-             rapidfuzz.fuzz.ratio(post_name,
-                                  pre.post_headers) > 70]
+        posts = session.query(PostsInfo).all()
 
-    return make_response(jsonify([{
-                                      "post_id": post[0].post_id,
-                                      "date_created": post[0].date_created,
-                                      "author_id": post[0].author_id,
-                                      "author_username": post[0].author_username,
-                                      "author_image": post[0].author_image,
-                                      "text": post[0].text,
-                                      "image_name": post[0].image_name,
-                                      "post_headers": post[0].post_headers,
+        score = [(pre, rapidfuzz.fuzz.ratio(post_name, pre.post_headers)) for pre in posts if
+                 rapidfuzz.fuzz.ratio(post_name,
+                                      pre.post_headers) > 70]
 
-                                  } for post in score[:10]]))
+        return make_response(jsonify([{
+                                          "post_id": post[0].post_id,
+                                          "date_created": post[0].date_created,
+                                          "author_id": post[0].author_id,
+                                          "author_username": post[0].author_username,
+                                          "author_image": post[0].author_image,
+                                          "text": post[0].text,
+                                          "image_name": post[0].image_name,
+                                          "post_headers": post[0].post_headers,
+
+                                      } for post in score[:10]]))
+    except Exception as e:
+        return make_response(jsonify({"status": "False", "message": str(e)}), 400)
 
 
 @app.route('/posts/delete-post', methods=['POST'])

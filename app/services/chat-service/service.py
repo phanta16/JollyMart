@@ -23,7 +23,7 @@ def get(chat_id):
         session = db_session.create_session()
         messages = session.query(MessagesInfo).filter_by(chat_id=chat_id).all()
         if len(messages) == 0:
-            return make_response(jsonify({"status": "No messages!"}))
+            return make_response(jsonify({"status": "False", "messages": "Напишите первое сообщение!"}))
         return make_response(jsonify([{
 
             'message': m.context,
@@ -35,7 +35,7 @@ def get(chat_id):
             for m in messages]))
     except requests.exceptions.RequestException as e:
 
-        return make_response(jsonify({'status': 'Unknown error!', 'message': str(e)}))
+        return make_response(jsonify({'status': 'False', 'message': str(e)}))
 
 
 @app.route('/chat/new-chat/<receiver_id>', methods=['POST'])
@@ -46,7 +46,7 @@ def create_chat(receiver_id):
             "uid": receiver_id,
         }
 
-        validate = requests.post('http://127.0.0.1:5000/auth/validate_user/', json=us)
+        validate = requests.post('http://auth-service:5000/auth/validate_user/', json=us)
         validate = validate.json()
         if validate["status"] != "True":
             return jsonify({
@@ -56,7 +56,7 @@ def create_chat(receiver_id):
         else:
             if session.query(ChatInfo).filter_by(receiver_id=receiver_id,
                                                  initiator_id=request.headers.get('X-User-Id')).first() is not None:
-                return make_response(jsonify({"status": "False"}))
+                return make_response(jsonify({"status": "False", "message": "Чат уже существует!"}))
 
             new_chat = ChatInfo(initiator_id=request.headers.get('X-User-Id'), receiver_id=receiver_id)
             session.add(new_chat)
@@ -66,7 +66,7 @@ def create_chat(receiver_id):
 
     except Exception as e:
 
-        return jsonify({'status': 'Unknown error!', 'message': str(e)})
+        return jsonify({'status': 'False', 'message': str(e)})
 
 
 class SocketsChat(Namespace):
@@ -78,7 +78,7 @@ class SocketsChat(Namespace):
 
     def on_message(self, data):
         if len(connected_users) != 2:
-            return
+            return make_response(jsonify({"status": "False", "message": "Непредвиденная ошибка!"}))
         sender_id = str(request.headers.get('X-User-Id'))
         try:
             recipient_id = str(data.get('to'))
@@ -98,8 +98,6 @@ class SocketsChat(Namespace):
                                        chat_id=chat_id.chat_id)
                 session.add(message)
                 session.commit()
-            else:
-                print('Error!')
 
         except Exception as e:
             print(e)

@@ -59,20 +59,23 @@ def register():
     try:
 
         session = db_session.create_session()
-        file = request.files['image']
-
-        files = {
-            "image": (file.filename, file.stream, file.content_type),
-                }
 
         username = request.form['username']
         hashed_password = request.form['password']
         email = request.form['email']
         session_id = secrets.token_hex(16)
+        file = request.files.get('image')
 
         if check_data(hashed_password, email, username)["status"] != 'True':
             return make_response(
                 jsonify({"status": "False", "message": check_data(hashed_password, email, username)["message"]}))
+        elif file is None:
+            return make_response(
+                jsonify({"status": "True"}))
+
+        files = {
+            "image": (file.filename, file.stream, file.content_type),
+                }
 
         user = AuthInfo(session_id=session_id,
                         hashed_password=hashlib.sha512(hashed_password.encode('utf-8')).hexdigest(), email=email)
@@ -95,10 +98,10 @@ def register():
         else:
             session.delete(user)
             session.commit()
-            return make_response(jsonify({'status': 'Error!', 'message': str(user_task["message"])}))
+            return make_response(jsonify({'status': 'False', 'message': str(user_task["message"])}))
 
     except Exception as e:
-        return make_response(jsonify({'status': 'Something went wrong!', 'message': str(e)}))
+        return make_response(jsonify({'status': 'False', 'message': str(e)}))
 
 
 @app.route('/auth/login', methods=['POST'])
@@ -123,7 +126,7 @@ def login():
                 return make_response(jsonify({'status': 'False', "message": "Неверный пароль!"}), 401)
 
     except Exception as e:
-        return make_response(jsonify({'status': 'Something went wrong!', 'message': str(e)}), 404)
+        return make_response(jsonify({'status': 'False', 'message': str(e)}), 404)
 
 
 def change_password(uid, new_password, headers):
@@ -224,11 +227,11 @@ def validate_user():
         if user:
             return make_response(jsonify({'status': 'True'}), 200)
         else:
-            return make_response(jsonify({'status': 'False'}), 200)
+            return make_response(jsonify({'status': 'False', 'message': 'Неавторизованный пользователь!'}), 200)
 
     except Exception as e:
 
-        return make_response(jsonify({'status': 'Unknown error!', 'message': str(e)}), 401)
+        return make_response(jsonify({'status': 'False', 'message': str(e)}), 401)
 
 
 ROUTES = {
