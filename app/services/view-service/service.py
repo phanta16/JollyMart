@@ -22,7 +22,7 @@ def registration():
             'password': password
         }
 
-        responce = requests.post('http://localhost:5007/auth/register', data=data, files=files)
+        responce = requests.post('http://auth-service:5007/auth/register', data=data, files=files)
 
         if responce.json()['status'] == 'True':
             resp = make_response(redirect(url_for('main')))
