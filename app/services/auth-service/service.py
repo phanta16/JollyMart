@@ -92,7 +92,7 @@ def register():
 
         if user_task['status'] == 'True':
             responce = make_response(jsonify({'status': 'True', }), 200)
-            responce.set_cookie('session_id', user.session_id, httponly=True, samesite='Lax', expires=604800)
+            responce.set_cookie('session_id', user.session_id, httponly=True, samesite='Lax', max_age=604800)
             return responce
         else:
             session.delete(user)
