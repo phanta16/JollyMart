@@ -92,7 +92,7 @@ def register():
 
         if user_task['status'] == 'True':
             responce = make_response(jsonify({'status': 'True', }), 200)
-            responce.set_cookie('session_id', user.session_id, httponly=True, samesite='Lax')
+            responce.set_cookie('session_id', user.session_id, httponly=True, samesite='Lax', expires=604800)
             return responce
         else:
             session.delete(user)
@@ -374,4 +374,4 @@ app.config['SECRET_KEY'] = 'THE_MOST_SECRET_KEY_YOU_HAVE_EVER_SEEN'
 
 db_session.global_init('db/JollyAuthDB.db')
 
-app.run(port=5000, host='0.0.0.0')
+app.run(port=5007, host='0.0.0.0')
