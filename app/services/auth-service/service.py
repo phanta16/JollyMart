@@ -59,23 +59,20 @@ def register():
     try:
 
         session = db_session.create_session()
+        file = request.files['image']
+
+        files = {
+            "image": (file.filename, file.stream, file.content_type),
+                }
 
         username = request.form['username']
         hashed_password = request.form['password']
         email = request.form['email']
         session_id = secrets.token_hex(16)
-        file = request.files.get('image')
 
         if check_data(hashed_password, email, username)["status"] != 'True':
             return make_response(
                 jsonify({"status": "False", "message": check_data(hashed_password, email, username)["message"]}))
-        elif file is None:
-            return make_response(
-                jsonify({"status": "True"}))
-
-        files = {
-            "image": (file.filename, file.stream, file.content_type),
-                }
 
         user = AuthInfo(session_id=session_id,
                         hashed_password=hashlib.sha512(hashed_password.encode('utf-8')).hexdigest(), email=email)
