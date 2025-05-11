@@ -5,11 +5,13 @@ import secrets
 import requests
 from email_validator import validate_email, EmailNotValidError
 from flask import jsonify, request, Flask, make_response
+from flask_cors import CORS
 
 import db_session
 from model import AuthInfo
 
 app = Flask(__name__)
+CORS(app, supports_credentials=True)
 
 
 def check_data(password, email, username):
@@ -90,7 +92,7 @@ def register():
 
         if user_task['status'] == 'True':
             responce = make_response(jsonify({'status': 'True', }), 200)
-            responce.set_cookie('session_id', user.session_id, httponly=True)
+            responce.set_cookie('session_id', user.session_id, httponly=True, samesite='Lax')
             return responce
         else:
             session.delete(user)
