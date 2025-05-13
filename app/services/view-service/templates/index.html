@@ -28,6 +28,42 @@
             min-height: 100vh;
         }
 
+        .floating-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ff6a00, #ffae00);
+            color: white;
+            font-size: 36px;
+            text-align: center;
+            line-height: 60px;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 100, 0, 0.6);
+            text-decoration: none;
+            z-index: 10;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: pulseGlow 2s infinite;
+        }
+
+        .floating-button:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 0 25px rgba(255, 140, 0, 1);
+        }
+
+        @keyframes pulseGlow {
+            0% {
+                box-shadow: 0 0 15px rgba(255, 100, 0, 0.6);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(255, 140, 0, 0.9);
+            }
+            100% {
+                box-shadow: 0 0 15px rgba(255, 100, 0, 0.6);
+            }
+        }
+
         .header {
             display: flex;
             justify-content: space-between;
@@ -161,9 +197,10 @@
             color: #333;
         }
 
-        .post-description {
-            font-size: 0.95em;
-            color: #555;
+        .post-price {
+            font-size: 1em;
+            font-weight: bold;
+            color: #333;
         }
 
         .post-author {
@@ -210,6 +247,8 @@
     </div>
 </div>
 
+<a href="{{ url_for('add_post') }}" class="floating-button">+</a>
+
 <div class="container">
     <div class="posts-grid">
         {% if posts %}
@@ -219,7 +258,7 @@
                 <img src="{{ post.image_path }}" class="post-image" alt="Фото товара">
                 <div class="post-content">
                     <div class="post-title">{{ post.post_headers }}</div>
-                    <div class="post-description">{{ post.text }}</div>
+                    <div class="post-price">Стоимость: {{ post.price }} ₽</div>
                     <div class="post-author">
                         <img src="{{ post.author_image }}" class="author-avatar" alt="Аватар продавца">
                         <span class="author-name">{{ post.author_username }}</span>

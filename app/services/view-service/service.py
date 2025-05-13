@@ -67,7 +67,7 @@ def login():
 def main():
     headers = {
         'Cookie': f'session_id={request.cookies.get("session_id")}',
-    }
+              }
     recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
     if recp['status'] != 'True':
         return make_response(redirect(url_for('registration')))
@@ -96,9 +96,41 @@ def profile():
     pass
 
 
-@app.route('/new-post', methods=['GET'])
-def new_post():
-    pass
+@app.route('/add-post', methods=['POST', 'GET'])
+def add_post():
+
+    headers = {
+        'Cookie': f'session_id={request.cookies.get("session_id")}',
+              }
+    recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
+    if recp['status'] != 'True':
+        return make_response(redirect(url_for('registration')))
+
+    if request.method == 'POST':
+        title = request.form['title']
+        price = request.form['price']
+        description = request.form['description']
+        file = request.files.get('image')
+
+        files = {
+            "image": (file.filename, file.stream, file.content_type),
+                }
+
+        data = {
+            'post_headers': title,
+            'price': price,
+            'text': description,
+                }
+
+        responce = requests.post('http://auth-service:5007/posts/add-post', data=data, files=files, headers=headers)
+
+        if responce.json()['status'] == 'True':
+            return render_template('add-post.html', success=True)
+        else:
+            flash(responce.json()['message'])
+            return render_template('add-post.html')
+
+    return render_template('add-post.html')
 
 @app.route('/search', methods=['GET'])
 def search():

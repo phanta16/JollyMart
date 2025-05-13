@@ -37,6 +37,7 @@ def get_post(post_id):
                 "media_url": os.path.join('images', post.image_name),
                 "host": host,
                 "text": post.text,
+                "price": post.price,
                 "author_username": post.author_username,
                 "author_image": post.author_image,
                 "date_created": post.date_created,
@@ -54,9 +55,6 @@ def all_posts():
         session = db_session.create_session()
         posts = session.query(PostsInfo).all()
 
-        if not posts:
-            return make_response(jsonify({"status": 'True', "message": "No posts!"}))
-
         return make_response(jsonify([{
             "post_id": post.post_id,
             "date_created": post.date_created,
@@ -64,6 +62,7 @@ def all_posts():
             "author_username": post.author_username,
             "author_image": post.author_image,
             "text": post.text,
+            "price": post.price,
             "image_path": os.path.join('images', post.image_name),
             "post_headers": post.post_headers,
 
@@ -81,6 +80,7 @@ def add_post():
         reque = dict(request.form)
         text = reque['text']
         post_headers = reque['post_headers']
+        price = reque['price']
 
         files = {
             key: (file.filename, file.stream, file.content_type)
@@ -111,7 +111,7 @@ def add_post():
 
         post = PostsInfo(text=text, author_id=author_id, post_headers=post_headers,
                          image_name=media_work["filename"], author_username=user_work["username"],
-                         author_image=user_work["avatar_path"])
+                         author_image=user_work["avatar_path"], price=price,)
         session.add(post)
         session.commit()
         return make_response(jsonify({"status": "True", "post_id": post.post_id}))
@@ -138,6 +138,7 @@ def search_post(post_name):
                                           "author_username": post[0].author_username,
                                           "author_image": post[0].author_image,
                                           "text": post[0].text,
+                                          "price": post[0].price,
                                           "image_path": os.path.join('images', post[0].image_name),
                                           "post_headers": post[0].post_headers,
 

@@ -122,7 +122,7 @@ def login():
                 responce.set_cookie('session_id', user.session_id, httponly=True)
                 return responce
             else:
-                return make_response(jsonify({'status': 'False', "message": "Неверный пароль!"}), 401)
+                return make_response(jsonify({'status': 'False', "message": "Неверный логин или пароль!"}), 401)
 
     except Exception as e:
         return make_response(jsonify({'status': 'False', 'message': str(e)}), 404)
