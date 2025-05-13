@@ -6,7 +6,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'THE_MOST_SECRET_KEY_YOU_HAVE_EVER_SEEN'
 
 
-@app.route('/register', methods=['POST', 'GET'])
+@app.route('/register', methods=['POST'])
 def registration():
     if request.method == 'POST':
         username = request.form['username']
@@ -98,6 +98,19 @@ def search():
         posts_data = None
 
     return render_template('index.html', current_user=user_data, posts=posts_data)
+
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    headers = {
+        'Cookie': f'session_id={request.cookies.get("session_id")}',
+    }
+    recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
+    if recp['status'] != 'True':
+        return make_response(redirect(url_for('registration')))
+    resp = make_response(redirect(url_for('registration')))
+    resp.set_cookie("session_id", '', expires=0)
+    return resp
 
 
 @app.route('/images/<filename>', methods=['GET'])
