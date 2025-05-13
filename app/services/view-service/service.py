@@ -38,9 +38,29 @@ def registration():
     return render_template('register.html')
 
 
-@app.route('/login', methods=['GET'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    pass
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+
+        data = {
+            'email': email,
+            'password': password
+        }
+
+        responce = requests.post('http://auth-service:5007/auth/login', json=data)
+
+        if responce.json()['status'] == 'True':
+            resp = make_response(redirect(url_for('main')))
+            cookie = responce.cookies.get('session_id')
+            resp.set_cookie("session_id", cookie, httponly=True, samesite='Lax', max_age=604800)
+            return resp
+        else:
+            flash(responce.json()['message'])
+            return render_template('login.html')
+
+    return render_template('login.html')
 
 
 @app.route('/', methods=['GET'])
