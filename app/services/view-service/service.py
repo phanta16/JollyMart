@@ -1,8 +1,10 @@
-from flask import Flask, request, jsonify, make_response, render_template, url_for, redirect, flash
 import requests
+from flask import Flask, request, make_response, render_template, url_for, redirect, flash, Response, \
+    stream_with_context
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'THE_MOST_SECRET_KEY_YOU_HAVE_EVER_SEEN'
+
 
 @app.route('/register', methods=['POST', 'GET'])
 def registration():
@@ -14,7 +16,7 @@ def registration():
 
         files = {
             "image": (file.filename, file.stream, file.content_type),
-                }
+        }
 
         data = {
             'username': username,
@@ -27,7 +29,7 @@ def registration():
         if responce.json()['status'] == 'True':
             resp = make_response(redirect(url_for('main')))
             cookie = responce.cookies.get('session_id')
-            resp.set_cookie("session_id", cookie)
+            resp.set_cookie("session_id", cookie, httponly=True, samesite='Lax', max_age=604800)
             return resp
         else:
             flash(responce.json()['message'])
@@ -35,28 +37,59 @@ def registration():
 
     return render_template('register.html')
 
+
 @app.route('/login', methods=['GET'])
 def login():
     pass
 
-@app.route('/', methods=['GET', 'POST'])
+
+@app.route('/', methods=['GET'])
 def main():
-    return render_template('base.html')
+    headers = {
+        'Cookie': f'session_id={request.cookies.get("session_id")}',
+    }
+    recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
+    if recp['status'] != 'True':
+        return make_response(redirect(url_for('registration')))
+
+    user_data = requests.get('http://auth-service:5007/user/get-user', headers=headers).json()
+    posts_data = requests.get('http://auth-service:5007/posts/all-posts', headers=headers).json()
+
+    if len(posts_data) == 0:
+        posts_data = None
+
+    return render_template('index.html', current_user=user_data, posts=posts_data)
+
 
 @app.route('/chat/<chat_id>', methods=['GET'])
 def chat(chat_id):
     pass
 
+
 @app.route('/post/<post_id>', methods=['GET'])
 def post(post_id):
     pass
+
 
 @app.route('/profile', methods=['GET'])
 def profile():
     pass
 
+
 @app.route('/new-post', methods=['GET'])
 def new_post():
     pass
+
+
+@app.route('/images/<filename>', methods=['GET'])
+def media_proxy(filename):
+    recp = requests.get(f'http://media-service:5005/media/images/{filename}', stream=True)
+
+    return Response(
+        stream_with_context(recp.iter_content(chunk_size=8192)),
+        status=recp.status_code,
+        headers=dict(recp.headers)
+    )
+
 
 app.run(port=5000, host='0.0.0.0')

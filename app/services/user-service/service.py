@@ -1,7 +1,8 @@
-import requests
-from flask import Flask, request, jsonify, make_response
 import json
 import os
+
+import requests
+from flask import Flask, request, jsonify, make_response
 
 import db_session
 from model import UserInfo
@@ -38,6 +39,43 @@ def get_user():
     except Exception as e:
         return jsonify({"status": "False", "message": str(e)})
 
+# Под следствием!
+# -------------------------------------------------------------------------------------------------
+
+@app.route('/users/<uid>', methods=['GET'])
+def get_user_by_id(uid):
+    try:
+
+        session = db_session.create_session()
+
+        cur_id = request.headers.get('X-User-Id')
+        host = True if cur_id == uid else False
+
+        user = session.query(UserInfo).filter(UserInfo.uid == uid).first()
+
+        if user is None:
+            return jsonify({"status": "False", "message": "Пользователя не существует!"})
+
+        favourites = requests.post("http://favourite-service:5004/favourite/all-favourites",
+                                   json={"user_id": uid})
+
+        if not favourites.status_code == 200:
+            return make_response(jsonify({"status": "False", "message": favourites.json()["message"]}))
+
+        return make_response(jsonify({"uid": uid,
+                                      "username": user.username,
+                                      "email": user.email,
+                                      "date_joined": user.date_joined,
+                                      "favourite": favourites.json(),
+                                      "avatar_path": os.path.join('images', user.avatar),
+                                      "status": 'True',
+                                      "host": str(host),
+                                      }), 200)
+    except Exception as e:
+        return jsonify({"status": "False", "message": str(e)})
+
+# -------------------------------------------------------------------------------------------------
+# Под следствием!
 
 @app.route('/user/add-user', methods=['POST'])
 def add_user():

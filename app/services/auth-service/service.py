@@ -92,7 +92,7 @@ def register():
 
         if user_task['status'] == 'True':
             responce = make_response(jsonify({'status': 'True', }), 200)
-            responce.set_cookie('session_id', user.session_id, httponly=True, samesite='Lax', max_age=604800)
+            responce.set_cookie('session_id', user.session_id)
             return responce
         else:
             session.delete(user)
@@ -226,10 +226,30 @@ def validate_user():
         if user:
             return make_response(jsonify({'status': 'True'}), 200)
         else:
-            return make_response(jsonify({'status': 'False', 'message': 'Неавторизованный пользователь!'}), 200)
+            return make_response(jsonify({'status': 'False', 'message': 'Неавторизованный пользователь!'}), 401)
 
     except Exception as e:
 
+        return make_response(jsonify({'status': 'False', 'message': str(e)}), 401)
+
+@app.route('/auth/is-exists', methods=['POST'])
+def existing_user():
+    try:
+        session_id = request.cookies.get("session_id")
+
+        if not session_id:
+            return jsonify({"status": "False",
+                            "message": "Non-authorized"}), 401
+
+        session = db_session.create_session()
+        user = session.query(AuthInfo).filter_by(session_id=session_id).first()
+        if not user:
+            return jsonify({"status": "False",
+                            "message": "Invalid session"}), 401
+
+        return jsonify({"status": "True",})
+
+    except Exception as e:
         return make_response(jsonify({'status': 'False', 'message': str(e)}), 401)
 
 
@@ -248,17 +268,18 @@ ROUTES = {
 def gateway():
     session_id = request.cookies.get("session_id")
 
-    if request.path == "/auth/register" or request.path == "/auth/login":
+    if request.path == "/auth/register" or request.path == "/auth/login" or request.path == "/auth/is-exists":
         return
 
     if not session_id:
-        return jsonify({"error": "Non-authorized"
-                                 ""}), 401
+        return jsonify({"status": "False",
+                                 "message": "Non-authorized"}), 401
 
     session = db_session.create_session()
     user = session.query(AuthInfo).filter_by(session_id=session_id).first()
     if not user:
-        return jsonify({"error": "Invalid session"})
+        return jsonify({"status": "False",
+                        "message": "Invalid session"}), 401
 
     uid = user.uid
 
@@ -283,7 +304,7 @@ def gateway():
             service_url = target_url + prefix[:-1] + request.path[len(prefix) - 1:]
             break
     else:
-        return jsonify({"error": "Unknown service!"})
+        return jsonify({"status": "False", "message": "Unknown route!"})
 
     headers = {k: v for k, v in request.headers if k.lower() not in [
         'host', 'connection', 'content-length', 'keep-alive',
@@ -303,7 +324,7 @@ def gateway():
                 json=request.get_json(silent=True)
             )
         except requests.exceptions.RequestException as e:
-            return jsonify({"error": "Service unavailable!", "detail": str(e)})
+            return jsonify({"status": "False", "message": "Service is unavailable!"})
         f_response = make_response(response.content, response.status_code)
         excluded = [
             'host', 'connection', 'content-length', 'keep-alive',
@@ -337,7 +358,7 @@ def gateway():
                 files=files,
             )
         except requests.exceptions.RequestException as e:
-            return jsonify({"error": "Service unavailable!", "detail": str(e)})
+            return jsonify({"status": "False", "message": "Service is unavailable!"})
 
         f_response = make_response(response.content, response.status_code)
         excluded = ['content-encoding', 'transfer-encoding', 'connection']
@@ -356,7 +377,7 @@ def gateway():
             data=request.get_data()
         )
     except requests.exceptions.RequestException as e:
-        return jsonify({"error": "Service unavailable!", "detail": str(e)})
+        return jsonify({"status": "False", "message": "Service is unavailable!"})
     f_response = make_response(response.content, response.status_code)
     excluded = [
         'host', 'connection', 'content-length', 'keep-alive',

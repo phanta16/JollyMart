@@ -46,7 +46,7 @@ def create_chat(receiver_id):
             "uid": receiver_id,
         }
 
-        validate = requests.post('http://auth-service:5000/auth/validate_user/', json=us)
+        validate = requests.post('http://auth-service:5007/auth/validate_user/', json=us)
         validate = validate.json()
         if validate["status"] != "True":
             return jsonify({

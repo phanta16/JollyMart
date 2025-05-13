@@ -47,12 +47,15 @@ def get_post(post_id):
         return make_response(jsonify({"status": "False", "message": str(e)}), 400)
 
 
-@app.route('/posts/all-posts', methods=['POST'])
+@app.route('/posts/all-posts', methods=['GET'])
 def all_posts():
     try:
 
         session = db_session.create_session()
         posts = session.query(PostsInfo).all()
+
+        if not posts:
+            return make_response(jsonify({"status": 'True', "message": "No posts!"}))
 
         return make_response(jsonify([{
             "post_id": post.post_id,
@@ -61,7 +64,7 @@ def all_posts():
             "author_username": post.author_username,
             "author_image": post.author_image,
             "text": post.text,
-            "image_name": post.image_name,
+            "image_path": os.path.join('images', post.image_name),
             "post_headers": post.post_headers,
 
         } for post in posts]))
