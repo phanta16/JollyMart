@@ -237,7 +237,7 @@
         <input type="text" name="q" class="search-input" placeholder="Поиск товаров...">
     </form>
     <div class="user-dropdown">
-        <a href="/user/{{ current_user.username }}" class="user-info">
+        <a href="/user/{{ current_user.uid }}" class="user-info">
             <img src="{{ current_user.avatar_path }}" class="user-avatar" alt="Аватар">
             <span>{{ current_user.username }}</span>
         </a>

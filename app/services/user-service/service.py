@@ -39,10 +39,7 @@ def get_user():
     except Exception as e:
         return jsonify({"status": "False", "message": str(e)})
 
-# Под следствием!
-# -------------------------------------------------------------------------------------------------
-
-@app.route('/users/<uid>', methods=['GET'])
+@app.route('/get-user/<uid>', methods=['GET'])
 def get_user_by_id(uid):
     try:
 
@@ -73,9 +70,6 @@ def get_user_by_id(uid):
                                       }), 200)
     except Exception as e:
         return jsonify({"status": "False", "message": str(e)})
-
-# -------------------------------------------------------------------------------------------------
-# Под следствием!
 
 @app.route('/user/add-user', methods=['POST'])
 def add_user():
