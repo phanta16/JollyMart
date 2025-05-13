@@ -119,7 +119,7 @@ def add_post():
         return make_response(jsonify({"status": "False", "message": str(e)}), 400)
 
 
-@app.route('/posts/search-post/<post_name>', methods=['POST'])
+@app.route('/posts/search-post/<post_name>', methods=['GET'])
 def search_post(post_name):
     try:
 
@@ -129,7 +129,7 @@ def search_post(post_name):
 
         score = [(pre, rapidfuzz.fuzz.ratio(post_name, pre.post_headers)) for pre in posts if
                  rapidfuzz.fuzz.ratio(post_name,
-                                      pre.post_headers) > 70]
+                                      pre.post_headers) > 20]
 
         return make_response(jsonify([{
                                           "post_id": post[0].post_id,
@@ -138,7 +138,7 @@ def search_post(post_name):
                                           "author_username": post[0].author_username,
                                           "author_image": post[0].author_image,
                                           "text": post[0].text,
-                                          "image_name": post[0].image_name,
+                                          "image_path": os.path.join('images', post[0].image_name),
                                           "post_headers": post[0].post_headers,
 
                                       } for post in score[:10]]))

@@ -122,13 +122,6 @@
             padding: 0 20px;
         }
 
-        .title {
-            text-align: center;
-            color: white;
-            font-size: 2.5em;
-            margin-bottom: 30px;
-        }
-
         .posts-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -218,7 +211,6 @@
 </div>
 
 <div class="container">
-    <h1 class="title">Объявления о продаже</h1>
     <div class="posts-grid">
         {% if posts %}
         {% for post in posts %}

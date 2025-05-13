@@ -80,6 +80,25 @@ def profile():
 def new_post():
     pass
 
+@app.route('/search', methods=['GET'])
+def search():
+    headers = {
+        'Cookie': f'session_id={request.cookies.get("session_id")}',
+    }
+    recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
+    if recp['status'] != 'True':
+        return make_response(redirect(url_for('registration')))
+
+    q = request.args.get('q')
+
+    user_data = requests.get('http://auth-service:5007/user/get-user', headers=headers).json()
+    posts_data = requests.get(f'http://auth-service:5007/posts/search-post/{q}', headers=headers).json()
+
+    if len(posts_data) == 0:
+        posts_data = None
+
+    return render_template('index.html', current_user=user_data, posts=posts_data)
+
 
 @app.route('/images/<filename>', methods=['GET'])
 def media_proxy(filename):
