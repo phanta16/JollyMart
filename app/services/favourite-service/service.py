@@ -19,7 +19,7 @@ def favourite_all():
 
         return make_response(jsonify([{"status": "True",
                                       "post_header": p.post_header,
-                                      "post_image": p.post_image,
+                                      "post_image": os.path.join('images', p.post_image),
                                       "post_id": p.post_id}
                                        for p in posts]), 200)
 

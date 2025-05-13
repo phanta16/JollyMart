@@ -146,7 +146,7 @@ def change_password(uid, new_password, headers):
         user.hashed_password = new_hashed_password
         session.commit()
 
-        return make_response(jsonify({'status': 'True'}), 200)
+        return make_response(jsonify({'status': 'True', 'user_id': user.uid}), 200)
 
     except Exception as e:
 
@@ -178,7 +178,7 @@ def change_email(uid, new_email, headers):
             user.email = new_email
             session.commit()
 
-            return make_response(jsonify({'status': 'True'}), 200)
+            return make_response(jsonify({'status': 'True', 'user_id': user.uid}), 200)
         else:
             return make_response(jsonify({"status": "False", "message": user_work.text}))
 
@@ -205,7 +205,7 @@ def delete_user(uid, headers):
             session.delete(user)
             session.commit()
 
-            return make_response(jsonify({'status': 'True'}), 200)
+            return make_response(jsonify({'status': 'True', 'user_id': user.uid}), 200)
 
         else:
 

@@ -48,6 +48,26 @@ def get_post(post_id):
         return make_response(jsonify({"status": "False", "message": str(e)}), 400)
 
 
+@app.route('/posts/get-posts', methods=['GET'])
+def get_posts():
+    try:
+        session = db_session.create_session()
+
+        reque = request.get_json()
+        uid = reque['user_id']
+
+        posts = session.query(PostsInfo).filter(PostsInfo.author_id == uid).all()
+
+        return make_response(jsonify([{"status": "True",
+                                       "post_header": p.post_headers,
+                                       "post_image": os.path.join('images', p.image_name),
+                                       "post_id": p.post_id}
+                                      for p in posts]), 200)
+
+    except Exception as e:
+        return make_response(jsonify({"status": "False", "message": str(e)}), 400)
+
+
 @app.route('/posts/all-posts', methods=['GET'])
 def all_posts():
     try:
@@ -117,7 +137,7 @@ def add_post():
 
         post = PostsInfo(text=text, author_id=author_id, post_headers=post_headers,
                          image_name=media_work["filename"], author_username=user_work["username"],
-                         author_image=user_work["avatar_path"], price=price,)
+                         author_image=user_work["avatar_path"], price=price, )
         session.add(post)
         session.commit()
         return make_response(jsonify({"status": "True", "post_id": post.post_id}))
@@ -138,17 +158,17 @@ def search_post(post_name):
                                       pre.post_headers) > 20]
 
         return make_response(jsonify([{
-                                          "post_id": post[0].post_id,
-                                          "date_created": post[0].date_created,
-                                          "author_id": post[0].author_id,
-                                          "author_username": post[0].author_username,
-                                          "author_image": post[0].author_image,
-                                          "text": post[0].text,
-                                          "price": post[0].price,
-                                          "image_path": os.path.join('images', post[0].image_name),
-                                          "post_headers": post[0].post_headers,
+            "post_id": post[0].post_id,
+            "date_created": post[0].date_created,
+            "author_id": post[0].author_id,
+            "author_username": post[0].author_username,
+            "author_image": post[0].author_image,
+            "text": post[0].text,
+            "price": post[0].price,
+            "image_path": os.path.join('images', post[0].image_name),
+            "post_headers": post[0].post_headers,
 
-                                      } for post in score[:10]]))
+        } for post in score[:10]]))
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}), 400)
 

@@ -8,6 +8,12 @@ app.config['SECRET_KEY'] = 'THE_MOST_SECRET_KEY_YOU_HAVE_EVER_SEEN'
 
 @app.route('/register', methods=['POST', 'GET'])
 def registration():
+    headers = {
+        'Cookie': f'session_id={request.cookies.get("session_id")}',
+    }
+    recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
+    if recp['status'] == 'True':
+        return make_response(redirect(url_for('main')))
     if request.method == 'POST':
         username = request.form['username']
         email = request.form['email']
@@ -40,6 +46,12 @@ def registration():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    headers = {
+        'Cookie': f'session_id={request.cookies.get("session_id")}',
+    }
+    recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
+    if recp['status'] == 'True':
+        return make_response(redirect(url_for('main')))
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
@@ -67,7 +79,7 @@ def login():
 def main():
     headers = {
         'Cookie': f'session_id={request.cookies.get("session_id")}',
-              }
+    }
     recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
     if recp['status'] != 'True':
         return make_response(redirect(url_for('registration')))
@@ -91,17 +103,103 @@ def post(post_id):
     pass
 
 
-@app.route('/profile', methods=['GET'])
-def profile():
-    pass
+@app.route('/user/<id>', methods=['GET'])
+def profile(id):
+    headers = {
+        'Cookie': f'session_id={request.cookies.get("session_id")}',
+    }
+    recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
+    if recp['status'] != 'True':
+        return make_response(redirect(url_for('registration')))
+    recp = requests.get(f'http://auth-service:5007/user/users/{id}', headers=headers).json()
+    if recp['host']:
+        host = True
+    else:
+        host = False
+    return render_template('profile.html', user=recp, is_owner=host)
 
-
-@app.route('/add-post', methods=['POST', 'GET'])
-def add_post():
-
+@app.route('/update_password', methods=['POST'])
+def change_password():
     headers = {
         'Cookie': f'session_id={request.cookies.get("session_id")}',
               }
+    recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
+    if recp['status'] != 'True':
+        return make_response(redirect(url_for('registration')))
+
+    new_password = request.form['password']
+    data = {
+        "new_password": new_password,
+           }
+    recp = requests.post('http://auth-service:5007/auth/change_password', headers=headers, json=data).json()
+    if recp['status'] != 'True':
+        flash(recp['message'])
+        return redirect(url_for('profile', id=recp['user_id']))
+    flash('Успешно!')
+    return redirect(url_for('profile', id=recp['user_id']))
+
+@app.route('/delete_account', methods=['POST'])
+def delete_account():
+    headers = {
+        'Cookie': f'session_id={request.cookies.get("session_id")}',
+    }
+    recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
+    if recp['status'] != 'True':
+        return make_response(redirect(url_for('registration')))
+
+    recp = requests.post('http://auth-service:5007/auth/delete_user', headers=headers).json()
+    if recp['status'] != 'True':
+        flash(recp['message'])
+        return redirect(url_for('profile', id=recp['user_id']))
+    flash('Всего доброго!')
+    resp = make_response(redirect(url_for('registration')))
+    resp.set_cookie("session_id", '', expires=0)
+    return resp
+
+@app.route('/update_avatar', methods=['POST'])
+def change_avatar():
+    headers = dict(request.headers)
+    headers['Cookie'] = f'session_id={request.cookies.get("session_id")}'
+    recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
+    if recp['status'] != 'True':
+        return make_response(redirect(url_for('registration')))
+
+    file = request.files.get('avatar')
+    files = {
+        "image": (file.filename, file.stream, file.content_type),
+            }
+    recp = requests.post('http://user-service:5003/user/set-avatar', files=files, headers=headers).json()
+    if recp['status'] != 'True':
+        flash(recp['message'])
+        return redirect(url_for('main'))
+    flash('Успешно!')
+    return redirect(url_for('main'))
+
+@app.route('/update_email', methods=['POST'])
+def change_email():
+    headers = {
+        'Cookie': f'session_id={request.cookies.get("session_id")}',
+    }
+    recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
+    if recp['status'] != 'True':
+        return make_response(redirect(url_for('registration')))
+
+    new_email = request.form['email']
+    data = {
+        "new_email": new_email,
+    }
+    recp = requests.post('http://auth-service:5007/auth/change_email', headers=headers, json=data).json()
+    if recp['status'] != 'True':
+        flash(recp['message'])
+        return redirect(url_for('profile', id=recp['user_id']))
+    flash('Успешно!')
+    return redirect(url_for('profile', id=recp['user_id']))
+
+@app.route('/add-post', methods=['POST', 'GET'])
+def add_post():
+    headers = {
+        'Cookie': f'session_id={request.cookies.get("session_id")}',
+    }
     recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
     if recp['status'] != 'True':
         return make_response(redirect(url_for('registration')))
@@ -114,13 +212,13 @@ def add_post():
 
         files = {
             "image": (file.filename, file.stream, file.content_type),
-                }
+        }
 
         data = {
             'post_headers': title,
             'price': price,
             'text': description,
-                }
+        }
 
         responce = requests.post('http://auth-service:5007/posts/add-post', data=data, files=files, headers=headers)
 
@@ -131,6 +229,7 @@ def add_post():
             return render_template('add-post.html')
 
     return render_template('add-post.html')
+
 
 @app.route('/search', methods=['GET'])
 def search():
