@@ -87,6 +87,12 @@ def add_post():
             for key, file in request.files.items()
         }
 
+        if not price.isdigit():
+            return make_response(jsonify({
+                "status": "False",
+                "message": "Цена должна быть числом!"
+            }))
+
         author_id = request.headers.get('X-User-Id')
 
         if text == '':
