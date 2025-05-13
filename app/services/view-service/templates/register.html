@@ -4,143 +4,192 @@
 <html lang="ru">
 <head>
 
-  <meta charset="UTF-8">
-  <title>Регистрация — Jolly Mart</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>Регистрация — Jolly Mart</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;500;700&display=swap"
+          rel="stylesheet">
 
-  <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
-      background: linear-gradient(-45deg, #ff2d00, #f4a00a, #ff3600, #ff2d00);
-      background-size: 400% 400%;
-      animation: gradientMove 15s ease infinite;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(-45deg, #ff2d00, #f4a00a, #ff3600, #ff2d00);
+            background-size: 400% 400%;
+            animation: gradientMove 15s ease infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-    @keyframes gradientMove {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
+        .login-redirect {
+            text-align: center;
+            margin-top: 10px;
+        }
 
-    .form-wrapper {
-      background: white;
-      padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      max-width: 500px;
-      overflow: hidden;
-      position: relative;
-    }
+        .login-link {
+            display: inline-block;
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeInUp 0.8s ease forwards;
+            animation-delay: 0.5s;
+        }
 
-    h2 {
-      font-size: 30px;
-      color: #000000;
-      text-align: center;
-      margin-bottom: 30px;
-    }
+        .login-link:hover {
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+        }
 
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: 500;
-    }
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-    input[type="text"],
-    input[type="email"],
-    input[type="password"],
-    input[type="file"] {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
+        @keyframes gradientMove {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
 
-    button {
-      margin-top: 20px;
-      width: 100%;
-      padding: 12px;
-      background-color: #ff8c00;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
+        .form-wrapper {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 20px;
+        }
 
-    button:hover {
-      background-color: #ffa733;
-    }
+        h2 {
+            font-size: 30px;
+            color: #000000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-    .step {
-      transition: opacity 0.5s ease, transform 0.5s ease;
-    }
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: 500;
+        }
 
-    .hidden {
-      opacity: 0;
-      transform: translateX(-100%);
-      position: absolute;
-      pointer-events: none;
-    }
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
 
-    .visible {
-      opacity: 1;
-      transform: translateX(0);
-      position: relative;
-      pointer-events: auto;
-    }
-  </style>
+        button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 12px;
+            background-color: #ff8c00;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #ffa733;
+        }
+
+        .step {
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .hidden {
+            opacity: 0;
+            transform: translateX(-100%);
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .visible {
+            opacity: 1;
+            transform: translateX(0);
+            position: relative;
+            pointer-events: auto;
+        }
+    </style>
 </head>
 <body>
 
-  <form class="form-wrapper" action="/register" method="post" enctype="multipart/form-data">
+<form class="form-wrapper" action="/register" method="post" enctype="multipart/form-data">
     <div id="step1" class="step visible">
-      <h2>Регистрация</h2>
+        <h2>Регистрация</h2>
 
-      <label for="username">Имя пользователя:</label>
-      <input type="text" id="username" name="username" required>
+        <label for="username">Имя пользователя:</label>
+        <input type="text" id="username" name="username" required>
 
-      <label for="email">Электронная почта:</label>
-      <input type="email" id="email" name="email" required>
+        <label for="email">Электронная почта:</label>
+        <input type="email" id="email" name="email" required>
 
-      <label for="password">Пароль:</label>
-      <input type="password" id="password" name="password" required>
+        <label for="password">Пароль:</label>
+        <input type="password" id="password" name="password" required>
 
-      <button type="button" onclick="goToStep2()">Далее</button>
+        <button type="button" onclick="goToStep2()">Далее</button>
     </div>
 
     <div id="step2" class="step hidden">
-      <h2>Ещё совсем чуть-чуть! Пожалуйста, укажите фото профиля:</h2>
+        <h2>Ещё совсем чуть-чуть! Пожалуйста, укажите фото профиля:</h2>
 
-      <label for="image">Загрузите изображение:</label>
-      <input type="file" id="image" name="image" accept="image/*" required>
+        <label for="image">Загрузите изображение:</label>
+        <input type="file" id="image" name="image" accept="image/*" required>
 
-      <button type="submit">Зарегистрироваться</button>
+        <button type="submit">Зарегистрироваться</button>
     </div>
-  </form>
+</form>
 
-  <script>
+<div class="login-redirect">
+    <a href="/login" class="login-link">Уже зарегистрированы?</a>
+</div>
+
+<script>
     function goToStep2() {
-      const step1 = document.getElementById('step1');
-      const step2 = document.getElementById('step2');
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
 
-      step1.classList.remove('visible');
-      step1.classList.add('hidden');
+        step1.classList.remove('visible');
+        step1.classList.add('hidden');
 
-      step2.classList.remove('hidden');
-      step2.classList.add('visible');
+        step2.classList.remove('hidden');
+        step2.classList.add('visible');
     }
-  </script>
+
+    document.querySelector('.login-link').addEventListener('mouseenter', function () {
+        this.classList.remove('animate');
+        void this.offsetWidth;
+        this.classList.add('animate');
+
+    });
+</script>
 
 </body>
 </html>
