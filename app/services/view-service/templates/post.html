@@ -1,0 +1,317 @@
+{% extends 'base.html' %}
+{% block title %}Объявление{%endblock%}
+{% block content %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ post.title }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(-45deg, #ffa726, #fb8c00, #ff7043, #ffa726);
+            background-size: 400% 400%;
+            animation: gradientBG 10s ease infinite;
+            color: #333;
+        }
+
+        @keyframes gradientBG {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 50px auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .image-header img {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .title-price {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #222;
+        }
+
+        .price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #e65100;
+        }
+
+        .description {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 30px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .favorite-btn {
+            font-size: 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            transition: transform 0.3s;
+            color: #bbb;
+        }
+
+        .favorite-btn.active {
+            color: #ff5722;
+            transform: scale(1.2);
+        }
+
+        .owner-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .owner-controls button {
+            padding: 8px 14px;
+            background: #e53935;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .owner-controls button:hover {
+            background: #c62828;
+        }
+
+        .comments {
+            margin-top: 20px;
+        }
+
+        .comments h3 {
+            margin-bottom: 15px;
+        }
+
+        .comment {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .comment img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 12px;
+        }
+
+        .comment-content {
+            background: #f7f7f7;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 600px;
+        }
+
+        .comment a {
+            font-weight: 500;
+            color: #f33f11;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .comment-content strong {
+            color: #e65100;
+        }
+
+        .comment-form textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+
+        .comment-form button {
+            background: #fb8c00;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .comment-form button:hover {
+            background: #ef6c00;
+        }
+
+        .post-author {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .post-author img {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            margin-right: 12px;
+        }
+
+        .post-author a {
+            font-weight: 500;
+            color: #e65100;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="image-header">
+        <img src="/{{ post.media_url }}" alt="Фото объявления">
+    </div>
+    <div class="content">
+
+        <div class="title-price" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+            <div class="title">{{ post.post_header }}</div>
+            <div class="price">{{ post.price }} ₽</div>
+        </div>
+
+        <div class="post-author">
+            <img src="/{{ post.author_image }}" alt="avatar">
+            <a href="/user/{{ post.author_id }}">{{ post.author_username }}</a>
+        </div>
+
+        <div class="description">{{ post.text }}</div>
+
+        <div class="controls">
+
+            <button class="favorite-btn" id="favButton" aria-label="Добавить в избранное">🔥</button>
+
+            {% if is_owner %}
+            <div class="owner-controls">
+                <form method="post" action="{{ url_for('delete_post', post_id=post.post_id) }}">
+                    <button type="submit">Удалить</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="comments">
+            <h3>Комментарии</h3>
+            <div id="commentsList">
+                {% for comment in post.comments %}
+                <div class="comment">
+                    <img src="/{{ comment.comment_author_image }}" alt="avatar">
+                    <div class="comment-content">
+                        <strong>
+                            <a href="{{ url_for('profile', id=comment.comment_author_id) }}">
+                                {{ comment.comment_author_username }}
+                            </a>
+                        </strong><br>
+                        {{ comment.context }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="comment-form">
+                <form id="commentForm">
+                    <textarea id="commentText" rows="3" placeholder="Ваш комментарий..."></textarea><br>
+                    <button type="submit">Отправить</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const commentForm = document.getElementById("commentForm");
+    const commentText = document.getElementById("commentText");
+    const commentsList = document.getElementById("commentsList");
+
+    commentForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const text = commentText.value.trim();
+        if (!text) {
+            alert("Комментарий не может быть пустым.");
+            return;
+        }
+
+        fetch("{{ url_for('add_comment', post_id=post.post_id) }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: JSON.stringify({text: text})
+        })
+            .then(response => {
+                if (!response.ok) throw new Error("Ошибка при отправке комментария");
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    const commentHTML = `
+          <div class="comment">
+            <img src="${'/' + data.comment_author_image}" alt="avatar">
+            <div class="comment-content">
+              <strong>${data.comment_author_username}</strong><br>
+              ${data.context}
+            </div>
+          </div>
+        `;
+                    commentsList.insertAdjacentHTML('afterbegin', commentHTML);
+                    commentText.value = "";
+                } else {
+                    alert("Ошибка: " + (data.message || "Неизвестная ошибка"));
+                }
+            })
+            .catch(err => {
+                console.error("Ошибка:", err);
+                alert("Не удалось добавить комментарий.");
+            });
+    });
+</script>
+
+</body>
+</html>
+{% endblock %}

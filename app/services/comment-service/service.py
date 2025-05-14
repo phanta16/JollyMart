@@ -53,7 +53,15 @@ def new_comment():
                                  comment_author_image=user_work["avatar_path"])
         session.add(comment)
         session.commit()
-        return make_response(jsonify({"status": "True"}))
+        return make_response(jsonify({"status": "True",
+                                      'success': True,
+                                      'comment_author_id': comment.comment_author_id,
+                                      'post_id': comment.post_id,
+                                      'context': comment.context,
+                                      'datestamp': comment.timestamp,
+                                      'comment_author_username': comment.comment_author_username,
+                                      'comment_author_image': comment.comment_author_image,
+                                      }))
 
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}))
@@ -78,6 +86,7 @@ def delete_comment():
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}))
 
+
 @app.route('/comment/post-deletion', methods=['POST'])
 def post_deletion_protocol():
     try:
@@ -97,6 +106,7 @@ def post_deletion_protocol():
 
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}), 400)
+
 
 @app.route('/comment/change-comment', methods=['PATCH'])
 def change_comment():

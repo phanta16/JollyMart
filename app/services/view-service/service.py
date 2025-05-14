@@ -100,7 +100,92 @@ def chat(chat_id):
 
 @app.route('/post/<post_id>', methods=['GET'])
 def post(post_id):
-    pass
+    headers = {
+        'Cookie': f'session_id={request.cookies.get("session_id")}',
+    }
+    recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
+    if recp['status'] != 'True':
+        return make_response(redirect(url_for('registration')))
+
+    recp = requests.get(f'http://auth-service:5007/posts/get-post/{post_id}', headers=headers).json()
+    if recp['status'] != 'True':
+        flash(recp['message'])
+        return redirect(url_for('main'))
+    if recp['host']:
+        host = True
+    else:
+        host = False
+    return render_template('post.html', post=recp, is_owner=host)
+
+@app.route('/add_comment/<post_id>', methods=['POST'])
+def add_comment(post_id):
+    headers = {
+        'Cookie': f'session_id={request.cookies.get("session_id")}',
+    }
+    recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
+    if recp['status'] != 'True':
+        return make_response(redirect(url_for('registration')))
+
+    reque = request.get_json()
+    text = reque['text']
+
+    recp = requests.post('http://auth-service:5007/comment/new-comment', headers=headers, json={
+        'post_id': post_id,
+        'context': text,
+    }).json()
+    if recp['status'] != 'True':
+        flash(recp['message'])
+        return redirect(url_for('post', post_id=post_id))
+    flash('Успех!')
+    return recp
+
+
+@app.route('/toggle_favourite/<post_id>', methods=['GET'])
+def toggle_favourite(post_id):
+    headers = {
+        'Cookie': f'session_id={request.cookies.get("session_id")}',
+    }
+    recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
+    if recp['status'] != 'True':
+        return make_response(redirect(url_for('registration')))
+
+    state = request.form.get('state')
+
+    if state == 'True' or state == True:
+        recp = requests.post('http://auth-service:5007/favourite/new-favourite', headers=headers,
+                             json={'post_id': post_id}).json()
+        if recp['status'] != 'True':
+            flash(recp['message'])
+            return redirect(url_for('post', post_id=post_id))
+        flash('Успех!')
+        return recp
+
+    elif state == 'False' or state == False:
+        recp = requests.post('http://auth-service:5007/favourite/delete-favourite', headers=headers,
+                             json={'post_id': post_id}).json()
+        if recp['status'] != 'True':
+            flash(recp['message'])
+            return redirect(url_for('post', post_id=post_id))
+        flash('Успех!')
+        return redirect(url_for('post', post_id=post_id))
+
+
+@app.route('/delete_post/<post_id>', methods=['GET'])
+def delete_post(post_id):
+    headers = {
+        'Cookie': f'session_id={request.cookies.get("session_id")}',
+    }
+    recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
+    if recp['status'] != 'True':
+        return make_response(redirect(url_for('registration')))
+
+    recp = requests.post(f'http://auth-service:5007/posts/delete-post', headers=headers,
+                        json={'post_id': post_id}).json()
+    if recp['status'] != 'True':
+        flash(recp['message'])
+        return redirect(url_for('main'))
+    flash('Успех!')
+    return redirect(url_for('main'))
 
 
 @app.route('/user/<id>', methods=['GET'])
@@ -112,6 +197,9 @@ def profile(id):
     if recp['status'] != 'True':
         return make_response(redirect(url_for('registration')))
     recp = requests.get(f'http://auth-service:5007/user/users/{id}', headers=headers).json()
+    if not recp['status'] == 'True':
+        flash(recp['message'])
+        return redirect(url_for('main'))
     if recp['host']:
         host = True
     else:
@@ -160,7 +248,7 @@ def delete_account():
 def change_avatar():
     headers = {
         'Cookie': f'session_id={request.cookies.get("session_id")}',
-            }
+    }
     recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
     if recp['status'] != 'True':
         return make_response(redirect(url_for('registration')))
@@ -182,7 +270,7 @@ def change_avatar():
 def change_email():
     headers = {
         'Cookie': f'session_id={request.cookies.get("session_id")}',
-            }
+    }
     recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
     if recp['status'] != 'True':
         return make_response(redirect(url_for('registration')))

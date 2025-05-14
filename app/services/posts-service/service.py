@@ -28,7 +28,7 @@ def get_post(post_id):
             if comment_work.status_code != 200:
                 return make_response(jsonify({"status": "False", "message": 'Непредвиденная ошибка!'}))
 
-            host = 'True' if str(headers['X-User-Id']) == post.author_id else 'False'
+            host = True if str(headers['X-User-Id']) == post.author_id else False
 
             return make_response(jsonify({
                 "status": "True",
@@ -38,6 +38,7 @@ def get_post(post_id):
                 "host": host,
                 "text": post.text,
                 "price": post.price,
+                "author_id": post.author_id,
                 "author_username": post.author_username,
                 "author_image": post.author_image,
                 "date_created": post.date_created,
