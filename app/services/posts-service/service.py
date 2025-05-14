@@ -211,8 +211,14 @@ def delete_post():
             work = requests.post(f'http://media-service:5005/media/delete-image/{post.image_name}',
                                  headers=headers).json()
 
+            comments = requests.post(f'http://comment-service:5002/comment/post-deletion',
+                                 headers=headers).json()
+
             if work["status"] != "True":
                 return make_response(jsonify({"status": "False", "message": work["message"]}), 404)
+
+            if comments["status"] != "True":
+                return make_response(jsonify({"status": "False", "message": comments["message"]}), 404)
 
             session.delete(post)
             session.commit()

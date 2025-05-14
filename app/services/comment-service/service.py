@@ -78,6 +78,25 @@ def delete_comment():
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}))
 
+@app.route('/comment/post-deletion', methods=['POST'])
+def post_deletion_protocol():
+    try:
+        reque = request.get_json()
+        session = db_session.create_session()
+
+        post_id = reque.get('post_id')
+
+        comments = session.query(CommentaryInfo).filter(CommentaryInfo.post_id == post_id).all()
+
+        for comment in comments:
+            session.delete(comment)
+
+        session.commit()
+
+        return make_response(jsonify([{"status": "True"}]))
+
+    except Exception as e:
+        return make_response(jsonify({"status": "False", "message": str(e)}), 400)
 
 @app.route('/comment/change-comment', methods=['PATCH'])
 def change_comment():
