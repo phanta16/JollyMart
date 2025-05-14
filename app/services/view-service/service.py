@@ -158,8 +158,9 @@ def delete_account():
 
 @app.route('/update_avatar', methods=['POST'])
 def change_avatar():
-    headers = dict(request.headers)
-    headers['Cookie'] = f'session_id={request.cookies.get("session_id")}'
+    headers = {
+        'Cookie': f'session_id={request.cookies.get("session_id")}',
+            }
     recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
     if recp['status'] != 'True':
         return make_response(redirect(url_for('registration')))
@@ -168,7 +169,8 @@ def change_avatar():
     files = {
         "image": (file.filename, file.stream, file.content_type),
     }
-    recp = requests.post('http://user-service:5003/user/set-avatar', files=files, headers=headers).json()
+    recp = requests.post('http://auth-service:5007/user/set-avatar', files=files,
+                         cookies={'session_id': request.cookies.get("session_id")}).json()
     if recp['status'] != 'True':
         flash(recp['message'])
         return redirect(url_for('main'))
@@ -180,7 +182,7 @@ def change_avatar():
 def change_email():
     headers = {
         'Cookie': f'session_id={request.cookies.get("session_id")}',
-    }
+            }
     recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
     if recp['status'] != 'True':
         return make_response(redirect(url_for('registration')))
