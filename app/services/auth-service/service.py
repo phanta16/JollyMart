@@ -115,7 +115,7 @@ def login():
         user = session.query(AuthInfo).filter(AuthInfo.email == email).first()
 
         if user is None:
-            return make_response(jsonify({'status': 'Такого пользователя не существует!'}))
+            return make_response(jsonify({'message': 'Такого пользователя не существует!', 'status': 'False'}))
         else:
             if user.hashed_password == hashlib.sha512(hashed_password.encode('utf-8')).hexdigest():
                 responce = make_response(jsonify({'status': 'True', 'session_id': user.session_id}), 200)
