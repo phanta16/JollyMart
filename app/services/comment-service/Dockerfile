@@ -6,4 +6,4 @@ COPY . .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["python", "service.py"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5002", "service:app"]

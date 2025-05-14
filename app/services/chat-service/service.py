@@ -113,5 +113,3 @@ class SocketsChat(Namespace):
 socketServer.on_namespace(SocketsChat("/socket"))
 
 db_session.global_init('db/JollyChatDB.db')
-
-socketServer.run(app, port=5001, host='0.0.0.0')

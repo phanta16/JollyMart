@@ -67,6 +67,26 @@ def get_posts():
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}), 400)
 
+@app.route('/posts/user-deletion', methods=['POST'])
+def user_deletion_protocol():
+    try:
+        headers = dict(request.headers)
+        session = db_session.create_session()
+
+        uid = headers.get('X-User-Id')
+
+        posts = session.query(PostsInfo).filter(PostsInfo.author_id == uid).all()
+
+        for post in posts:
+            session.delete(post)
+
+        session.commit()
+
+        return make_response(jsonify([{"status": "True", "user_id": uid}]))
+
+    except Exception as e:
+        return make_response(jsonify({"status": "False", "message": str(e)}), 400)
+
 
 @app.route('/posts/all-posts', methods=['GET'])
 def all_posts():
@@ -203,4 +223,3 @@ def delete_post():
 
 
 db_session.global_init('db/JollyPostsDB.db')
-app.run(port=5009, host='0.0.0.0')

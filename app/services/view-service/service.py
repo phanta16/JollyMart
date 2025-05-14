@@ -118,11 +118,12 @@ def profile(id):
         host = False
     return render_template('profile.html', user=recp, is_owner=host)
 
+
 @app.route('/update_password', methods=['POST'])
 def change_password():
     headers = {
         'Cookie': f'session_id={request.cookies.get("session_id")}',
-              }
+    }
     recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
     if recp['status'] != 'True':
         return make_response(redirect(url_for('registration')))
@@ -130,13 +131,14 @@ def change_password():
     new_password = request.form['password']
     data = {
         "new_password": new_password,
-           }
+    }
     recp = requests.post('http://auth-service:5007/auth/change_password', headers=headers, json=data).json()
     if recp['status'] != 'True':
         flash(recp['message'])
         return redirect(url_for('profile', id=recp['user_id']))
     flash('Успешно!')
     return redirect(url_for('profile', id=recp['user_id']))
+
 
 @app.route('/delete_account', methods=['POST'])
 def delete_account():
@@ -147,14 +149,12 @@ def delete_account():
     if recp['status'] != 'True':
         return make_response(redirect(url_for('registration')))
 
-    recp = requests.post('http://auth-service:5007/auth/delete_user', headers=headers).json()
-    if recp['status'] != 'True':
-        flash(recp['message'])
-        return redirect(url_for('profile', id=recp['user_id']))
+    requests.post('http://auth-service:5007/auth/delete_user', headers=headers).json()
     flash('Всего доброго!')
     resp = make_response(redirect(url_for('registration')))
     resp.set_cookie("session_id", '', expires=0)
     return resp
+
 
 @app.route('/update_avatar', methods=['POST'])
 def change_avatar():
@@ -167,13 +167,14 @@ def change_avatar():
     file = request.files.get('avatar')
     files = {
         "image": (file.filename, file.stream, file.content_type),
-            }
+    }
     recp = requests.post('http://user-service:5003/user/set-avatar', files=files, headers=headers).json()
     if recp['status'] != 'True':
         flash(recp['message'])
         return redirect(url_for('main'))
     flash('Успешно!')
     return redirect(url_for('main'))
+
 
 @app.route('/update_email', methods=['POST'])
 def change_email():
@@ -194,6 +195,7 @@ def change_email():
         return redirect(url_for('profile', id=recp['user_id']))
     flash('Успешно!')
     return redirect(url_for('profile', id=recp['user_id']))
+
 
 @app.route('/add-post', methods=['POST', 'GET'])
 def add_post():
@@ -273,6 +275,3 @@ def media_proxy(filename):
         status=recp.status_code,
         headers=dict(recp.headers)
     )
-
-
-app.run(port=5000, host='0.0.0.0')

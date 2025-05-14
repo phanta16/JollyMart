@@ -394,5 +394,3 @@ def gateway():
 app.config['SECRET_KEY'] = 'THE_MOST_SECRET_KEY_YOU_HAVE_EVER_SEEN'
 
 db_session.global_init('db/JollyAuthDB.db')
-
-app.run(port=5007, host='0.0.0.0')

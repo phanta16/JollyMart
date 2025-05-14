@@ -101,4 +101,3 @@ def change_comment():
 
 
 db_session.global_init('db/JollyCommentDB.db')
-app.run(port=5002, host='0.0.0.0')

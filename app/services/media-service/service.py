@@ -98,4 +98,3 @@ def set_avatar(filename):
         return make_response(jsonify({"status": "False", "message": str(e)}))
 
 db_session.global_init('db/JollyMediaDB.db')
-app.run(port=5005, host='0.0.0.0')

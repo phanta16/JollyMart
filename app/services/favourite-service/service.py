@@ -80,4 +80,3 @@ def delete_favourite():
 
 
 db_session.global_init('db/JollyFavouriteDB.db')
-app.run(port=5004, host='0.0.0.0')

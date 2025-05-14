@@ -181,8 +181,9 @@ def delete_user():
             return jsonify({"status": "False", "message": "Пользователя не существует!"})
 
         req = requests.post(f"http://media-service:5005/media/delete-image/{user.avatar}", headers=headers).json()
+        req1 = requests.post("http://posts-service:5009/posts/user-deletion", headers=headers).json()
 
-        if req["status"] == "True":
+        if req["status"] == "True" and req1["status"] == "True":
 
             session.delete(user)
             session.commit()
@@ -197,4 +198,3 @@ def delete_user():
 
 
 db_session.global_init('db/JollyUserDB.db')
-app.run(port=5003, host='0.0.0.0')
