@@ -112,12 +112,6 @@ def main():
 
     return render_template('index.html', current_user=user_data, posts=posts_data)
 
-
-@app.route('/chat/<chat_id>', methods=['GET'])
-def chat(chat_id):
-    pass
-
-
 @app.route('/post/<post_id>', methods=['GET'])
 def post(post_id):
     headers = {
