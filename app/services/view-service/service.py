@@ -1,6 +1,6 @@
 import requests
 from flask import Flask, request, make_response, render_template, url_for, redirect, flash, Response, \
-    stream_with_context
+    stream_with_context, jsonify
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'THE_MOST_SECRET_KEY_YOU_HAVE_EVER_SEEN'
@@ -136,8 +136,21 @@ def add_comment(post_id):
     if recp['status'] != 'True':
         flash(recp['message'])
         return redirect(url_for('post', post_id=post_id))
-    flash('Успех!')
     return recp
+
+@app.route('/get_comment/<post_id>', methods=['GET'])
+def get_comment(post_id):
+    headers = {
+        'Cookie': f'session_id={request.cookies.get("session_id")}',
+    }
+    recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
+    if recp['status'] != 'True':
+        return make_response(redirect(url_for('registration')))
+
+    recp = requests.post('http://auth-service:5007/comment/all-comments', headers=headers, json={
+        'post_id': post_id,
+    }).json()
+    return jsonify({'comments': recp})
 
 
 @app.route('/toggle_favourite/<post_id>', methods=['GET'])

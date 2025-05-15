@@ -123,24 +123,56 @@
             margin-bottom: 15px;
         }
 
-        .comment {
+        .comment-card {
             display: flex;
             align-items: flex-start;
-            margin-bottom: 20px;
+            gap: 12px;
+            padding: 12px 16px;
+            background: #fff;
+            border-radius: 12px;
+            max-width: 600px;
         }
 
-        .comment img {
-            width: 40px;
-            height: 40px;
+        .comment-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 16px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 12px;
+        }
+
+        .comment-avatar {
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
-            margin-right: 12px;
+            object-fit: cover;
+            border: 2px solid #ff9f43;
         }
 
         .comment-content {
-            background: #f7f7f7;
-            padding: 12px 16px;
-            border-radius: 12px;
-            max-width: 600px;
+            flex: 1;
+        }
+
+        .comment-header a {
+            text-decoration: none;
+            color: #ff6f00;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .comment-text {
+            margin-top: 4px;
+            font-size: 0.95rem;
+            color: #333;
+        }
+
+        .comment-date {
+            margin-top: 6px;
+            font-size: 0.75rem;
+            color: #888;
         }
 
         .comment a {
@@ -198,6 +230,8 @@
             font-size: 16px;
         }
 
+
+
     </style>
 </head>
 <body>
@@ -235,22 +269,7 @@
 
         <div class="comments">
             <h3>Комментарии</h3>
-            <div id="commentsList">
-                {% for comment in post.comments %}
-                <div class="comment">
-                    <img src="/{{ comment.comment_author_image }}" alt="avatar">
-                    <div class="comment-content">
-                        <strong>
-                            <a href="{{ url_for('profile', id=comment.comment_author_id) }}">
-                                {{ comment.comment_author_username }}
-                            </a>
-                        </strong><br>
-                        {{ comment.context }}
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-
+            <div id="comments"></div>
             <div class="comment-form">
                 <form id="commentForm">
                     <textarea id="commentText" rows="3" placeholder="Ваш комментарий..."></textarea><br>
@@ -265,7 +284,6 @@
 <script>
     const commentForm = document.getElementById("commentForm");
     const commentText = document.getElementById("commentText");
-    const commentsList = document.getElementById("commentsList");
 
     commentForm.addEventListener("submit", function (event) {
         event.preventDefault();
@@ -284,32 +302,51 @@
             },
             body: JSON.stringify({text: text})
         })
-            .then(response => {
-                if (!response.ok) throw new Error("Ошибка при отправке комментария");
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    const commentHTML = `
-          <div class="comment">
-            <img src="${'/' + data.comment_author_image}" alt="avatar">
-            <div class="comment-content">
-              <strong>${data.comment_author_username}</strong><br>
-              ${data.context}
-            </div>
-          </div>
-        `;
-                    commentsList.insertAdjacentHTML('afterbegin', commentHTML);
-                    commentText.value = "";
-                } else {
-                    alert("Ошибка: " + (data.message || "Неизвестная ошибка"));
-                }
-            })
-            .catch(err => {
-                console.error("Ошибка:", err);
-                alert("Не удалось добавить комментарий.");
-            });
     });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const postId = "{{ post.post_id }}";
+
+        fetchComments(postId);
+
+        setInterval(() => fetchComments(postId), 3000);
+        window.onload = () => fetchComments(postId);
+
+        function fetchComments(postId) {
+            fetch(`/get_comment/${postId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('comments');
+                    container.innerHTML = "";
+
+                    data.comments.forEach(comment => {
+                        const div = document.createElement("div");
+                        div.classList.add("comment");
+
+                        div.innerHTML = `
+  <div class="comment-card">
+    <img class="comment-avatar" src="/${comment.comment_author_image}" alt="avatar">
+    <div class="comment-content">
+      <div class="comment-header">
+        <strong>
+          <a class="comment-author" href="/user/${comment.comment_author_id}">
+            ${comment.comment_author_username}
+          </a>
+        </strong>
+      </div>
+      <div class="comment-text">${comment.context}</div>
+      <div class="comment-date">${comment.datestamp}</div>
+    </div>
+  </div>
+`;
+                        ;
+
+                        container.appendChild(div);
+                    });
+                })
+                .catch(err => console.error("Ошибка загрузки комментариев:", err));
+        }
+    })
 </script>
 
 </body>

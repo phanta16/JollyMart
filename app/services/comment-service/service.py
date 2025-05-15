@@ -25,12 +25,13 @@ def all_comments():
             'datestamp': c.timestamp,
             'comment_author_username': c.comment_author_username,
             'comment_author_image': c.comment_author_image,
+            'success': True,
 
         }
             for c in comments]))
 
     except Exception as e:
-        return make_response(jsonify({"status": "False", "message": str(e)}))
+        return make_response(jsonify({"status": "False", "message": str(e)}), 500)
 
 
 @app.route('/comment/new-comment', methods=['POST'])
