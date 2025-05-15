@@ -1,6 +1,6 @@
 import requests
 from flask import Flask, request, make_response, render_template, url_for, redirect, flash, Response, \
-    stream_with_context, jsonify
+    stream_with_context
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'THE_MOST_SECRET_KEY_YOU_HAVE_EVER_SEEN'
@@ -43,6 +43,7 @@ def registration():
 
     return render_template('register.html')
 
+
 @app.route('/delete_comment/<comment_id>', methods=['POST'])
 def delete_comment(comment_id):
     headers = {
@@ -52,11 +53,15 @@ def delete_comment(comment_id):
     if recp['status'] != 'True':
         return make_response(redirect(url_for('registration')))
 
-    recp = requests.post('http://auth-service:5007/comment/delete-comment', headers=headers, json={
+    recp = requests.delete('http://auth-service:5007/comment/delete-comment', headers=headers, json={
         "comment_id": comment_id
     }).json()
-    post_id = recp['post_id']
-    return make_response(redirect(url_for('post', post_id=post_id)))
+    if recp['status'] == 'True':
+        post_id = recp['post_id']
+        return make_response(redirect(url_for('post', post_id=post_id)))
+    else:
+        flash(recp['message'])
+        return make_response(redirect(url_for('main')))
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -129,6 +134,7 @@ def post(post_id):
         return redirect(url_for('main'))
     return render_template('post.html', post=recp, current_user=recp_user)
 
+
 @app.route('/add_comment/<post_id>', methods=['POST'])
 def add_comment(post_id):
     headers = {
@@ -149,6 +155,7 @@ def add_comment(post_id):
         return redirect(url_for('post', post_id=post_id))
     return redirect(url_for('post', post_id=post_id))
 
+
 @app.route('/toggle_favourite/<post_id>', methods=['POST'])
 def toggle_favourite(post_id):
     headers = {
@@ -158,12 +165,9 @@ def toggle_favourite(post_id):
     if recp['status'] != 'True':
         return make_response(redirect(url_for('registration')))
     recp = requests.post('http://auth-service:5007/favourite/dispatch-favourite', headers=headers,
-                             json={'post_id': post_id}).json()
-    if recp['status'] != 'True':
-        flash(recp['message'])
-        return redirect(url_for('post', post_id=post_id))
+                         json={'post_id': post_id}).json()
     flash('Успех!')
-    return redirect(url_for('post', post_id=post_id))
+    return redirect(url_for('post', post_id=post_id, is_favorite=recp['stat']))
 
 
 @app.route('/delete_post/<post_id>', methods=['POST'])
@@ -176,7 +180,7 @@ def delete_post(post_id):
         return make_response(redirect(url_for('registration')))
 
     recp = requests.post(f'http://auth-service:5007/posts/delete-post', headers=headers,
-                        json={'post_id': post_id}).json()
+                         json={'post_id': post_id}).json()
     if recp['status'] != 'True':
         flash(recp['message'])
         return redirect(url_for('main'))
@@ -238,6 +242,7 @@ def delete_account():
     resp = make_response(redirect(url_for('registration')))
     resp.set_cookie("session_id", '', expires=0)
     return resp
+
 
 @app.route('/update_email', methods=['POST'])
 def change_email():

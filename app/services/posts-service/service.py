@@ -68,6 +68,7 @@ def get_posts():
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}), 400)
 
+
 @app.route('/posts/user-deletion', methods=['POST'])
 def user_deletion_protocol():
     try:
@@ -213,13 +214,14 @@ def delete_post():
                                  headers=headers).json()
 
             comments = requests.post(f'http://comment-service:5002/comment/post-deletion',
-                                 headers=headers, json={
+                                     headers=headers, json={
                     "post_id": post.post_id,
                 }).json()
 
             favourite = requests.post(f'http://favourite-service:5004/favourite/delete-post',
-                                 headers=headers, json={
+                                      headers=headers, json={
                     "post_id": post.post_id,
+
                 }).json()
 
             if work["status"] != "True":

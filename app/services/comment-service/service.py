@@ -103,7 +103,7 @@ def post_deletion_protocol():
 
         session.commit()
 
-        return make_response(jsonify([{"status": "True"}]))
+        return make_response(jsonify({"status": "True"}))
 
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}), 400)
