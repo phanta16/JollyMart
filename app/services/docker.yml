@@ -9,15 +9,6 @@ services:
       - internal
     build: ./auth-service
 
-  chat-service:
-    expose:
-      - "5001"
-    networks:
-      - internal
-    build: ./chat-service
-    depends_on:
-      - auth-service
-
   comment-service:
     expose:
       - "5002"
