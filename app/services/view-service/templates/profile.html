@@ -205,28 +205,6 @@
             color: #ffa500;
         }
 
-        .chat-button {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: linear-gradient(45deg, #ff6600, #ff9900);
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 30px;
-            font-size: 16px;
-            font-weight: bold;
-            text-decoration: none;
-            box-shadow: 0 4px 15px rgba(255, 102, 0, 0.4);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            animation: pulse 2s infinite ease-in-out;
-            z-index: 999;
-        }
-
-        .chat-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.6);
-        }
 
         @keyframes pulse {
             0%, 100% {
@@ -302,9 +280,6 @@
             {% else %}
             <p>Объявлений пока-что нет</p>
             {% endfor %}
-        </div>
-        <a href="/chat/{{ user.uid }}" class="chat-button">💬 Чат</a>
-    </div>
     {% endif %}
 </div>
 
