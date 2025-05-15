@@ -1,23 +1,21 @@
 {% extends 'base.html' %}
-{% block title %}Объявление{%endblock%}
+{% block title %}{{ post.post_header }}{%endblock%}
 {% block content %}
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>{{ post.title }}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <style>
         body {
             margin: 0;
             font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(-45deg, #ffa726, #fb8c00, #ff7043, #ffa726);
-            background-size: 400% 400%;
-            animation: gradientBG 10s ease infinite;
             color: #333;
+            background: linear-gradient(270deg, #ffa726, #ff7043, #ffcc80);
+            background-size: 600% 600%;
+            animation: gradientMove 12s ease infinite;
         }
 
-        @keyframes gradientBG {
+        @keyframes gradientMove {
             0% {
                 background-position: 0% 50%;
             }
@@ -31,324 +29,200 @@
 
         .container {
             max-width: 900px;
-            margin: 50px auto;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
+            margin: 40px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
 
-        .image-header img {
+        .post-image {
             width: 100%;
             height: 400px;
             object-fit: cover;
-            display: block;
-        }
-
-        .content {
-            padding: 30px;
-        }
-
-        .title-price {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            border-radius: 10px;
             margin-bottom: 20px;
         }
 
-        .title {
-            font-size: 28px;
+        .post-title {
+            font-size: 2.4em;
             font-weight: bold;
-            color: #222;
+            margin-bottom: 10px;
         }
 
-        .price {
-            font-size: 24px;
+        .post-price {
+            font-size: 1.8em;
+            color: #ff5722;
             font-weight: bold;
-            color: #e65100;
+            margin-bottom: 20px;
         }
 
-        .description {
-            font-size: 16px;
-            line-height: 1.6;
-            color: #555;
+        .post-description {
+            font-size: 1.1em;
             margin-bottom: 30px;
+            line-height: 1.6;
         }
 
-        .controls {
+        .author-info {
             display: flex;
-            justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
         }
 
-        .favorite-btn {
-            font-size: 24px;
-            cursor: pointer;
-            background: none;
-            border: none;
-            transition: transform 0.3s;
-            color: #bbb;
+        .author-info img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 15px;
         }
 
-        .favorite-btn.active {
-            color: #ff5722;
-            transform: scale(1.2);
+        .author-info a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 600;
+            font-size: 1.1em;
         }
 
-        .owner-controls {
-            display: flex;
-            gap: 10px;
-        }
-
-        .owner-controls button {
-            padding: 8px 14px;
-            background: #e53935;
+        .delete-post-button {
+            background: #ff4d4d;
             color: white;
             border: none;
-            border-radius: 8px;
+            padding: 10px 18px;
+            border-radius: 5px;
+            font-size: 14px;
             cursor: pointer;
-            transition: background 0.3s;
+            margin-left: 5px;
         }
 
-        .owner-controls button:hover {
-            background: #c62828;
+        .comments-section {
+            margin-top: 50px;
         }
 
-        .comments {
-            margin-top: 20px;
-        }
-
-        .comments h3 {
+        .comment {
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 8px;
             margin-bottom: 15px;
         }
 
-        .comment-card {
+        .comment-header {
             display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 12px 16px;
-            background: #fff;
-            border-radius: 12px;
-            max-width: 600px;
+            align-items: center;
+            margin-bottom: 5px;
         }
 
-        .comment-card {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 12px 16px;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-            margin-bottom: 12px;
-        }
-
-        .comment-avatar {
-            width: 42px;
-            height: 42px;
+        .comment-header img {
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #ff9f43;
+            margin-right: 10px;
         }
 
-        .comment-content {
-            flex: 1;
-        }
-
-        .comment-header a {
-            text-decoration: none;
-            color: #ff6f00;
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        .comment-text {
-            margin-top: 4px;
-            font-size: 0.95rem;
+        .comment-username {
+            font-weight: bold;
             color: #333;
+            text-decoration: none;
         }
 
         .comment-date {
-            margin-top: 6px;
-            font-size: 0.75rem;
+            font-size: 0.8em;
+            color: gray;
+            margin-left: auto;
+        }
+
+        .delete-comment-button {
+            background: none;
+            border: none;
             color: #888;
+            font-size: 1em;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: color 0.2s ease;
         }
 
-        .comment a {
-            font-weight: 500;
-            color: #f33f11;
-            text-decoration: none;
-            font-size: 16px;
+        .delete-comment-button:hover {
+            color: #e53935;
         }
 
-        .comment-content strong {
-            color: #e65100;
-        }
-
-        .comment-form textarea {
+        .add-comment-form textarea {
             width: 100%;
-            padding: 12px;
-            border-radius: 10px;
+            padding: 10px;
+            border-radius: 6px;
             border: 1px solid #ccc;
-            font-family: inherit;
             resize: vertical;
             margin-bottom: 10px;
         }
 
-        .comment-form button {
-            background: #fb8c00;
-            color: white;
+        .add-comment-form button {
+            padding: 8px 16px;
             border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
+            background: #ffa726;
+            color: white;
+            font-weight: bold;
+            border-radius: 6px;
             cursor: pointer;
-            transition: background 0.3s;
         }
-
-        .comment-form button:hover {
-            background: #ef6c00;
-        }
-
-        .post-author {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .post-author img {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            margin-right: 12px;
-        }
-
-        .post-author a {
-            font-weight: 500;
-            color: #e65100;
-            text-decoration: none;
-            font-size: 16px;
-        }
-
-
 
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="image-header">
-        <img src="/{{ post.media_url }}" alt="Фото объявления">
+
+    <img src="/{{ post.media_url }}" alt="Фото" class="post-image">
+
+    <div class="post-title">{{ post.post_header }}</div>
+    <div class="post-price">{{ post.price }} ₽</div>
+    <div class="post-description">{{ post.text }}</div>
+
+    <div class="author-info">
+        <img src="/{{ post.author_image }}" alt="Аватар">
+        <a href="/user/{{ post.author_id }}">{{ post.author_username }}</a>
     </div>
-    <div class="content">
 
-        <div class="title-price" style="flex-direction: column; align-items: flex-start; gap: 8px;">
-            <div class="title">{{ post.post_header }}</div>
-            <div class="price">{{ post.price }} ₽</div>
-        </div>
+    <form method="POST" action="/toggle_favourite/{{ post.post_id }}">
+        <button type="submit"
+                onclick="this.classList.toggle('active')">
+            🔥
+        </button>
+    </form>
 
-        <div class="post-author">
-            <img src="/{{ post.author_image }}" alt="avatar">
-            <a href="/user/{{ post.author_id }}">{{ post.author_username }}</a>
-        </div>
+    {% if post.author_id|int == current_user.uid|int %}
+    <form method="POST" action="/delete_post/{{ post.post_id }}" style="display: inline;"
+          onsubmit="return confirm('Удалить объявление?');">
+        <button type="submit" class="delete-post-button">🗑 Удалить объявление</button>
+    </form>
+    {% endif %}
 
-        <div class="description">{{ post.text }}</div>
+    <div class="comments-section">
+        <h3>Комментарии:</h3>
 
-        <div class="controls">
-
-            <button class="favorite-btn" id="favButton" aria-label="Добавить в избранное">🔥</button>
-
-            {% if is_owner %}
-            <div class="owner-controls">
-                <form method="post" action="{{ url_for('delete_post', post_id=post.post_id) }}">
-                    <button type="submit">Удалить</button>
+        {% for comment in post.comments %}
+        <div class="comment">
+            <div class="comment-header">
+                <img src="/{{ comment.comment_author_image }}" alt="Аватар">
+                <a href="/user/{{ comment.comment_author_id }}" class="comment-username">{{ comment.comment_author_username
+                    }}</a>
+                <div class="comment-date">{{ comment.datestamp }}</div>
+                {% if current_user.uid|int == comment.comment_author_id|int %}
+                <form method="POST"
+                      action="/delete_comment/{{ comment.comment_id }}"
+                      onsubmit="return confirm('Удалить комментарий?');">
+                    <button type="submit" class="delete-comment-button">🗑</button>
                 </form>
+                {% endif %}
             </div>
-            {% endif %}
+            <div class="comment-content">{{ comment.context }}</div>
         </div>
+        {% endfor %}
 
-        <div class="comments">
-            <h3>Комментарии</h3>
-            <div id="comments"></div>
-            <div class="comment-form">
-                <form id="commentForm">
-                    <textarea id="commentText" rows="3" placeholder="Ваш комментарий..."></textarea><br>
-                    <button type="submit">Отправить</button>
-                </form>
-            </div>
-        </div>
-
+        <form method="POST" action="/add_comment/{{ post.post_id }}" class="add-comment-form">
+            <textarea name="context" rows="3" placeholder="Оставьте комментарий..." required></textarea>
+            <button type="submit">Добавить комментарий</button>
+        </form>
     </div>
+
 </div>
-
-<script>
-    const commentForm = document.getElementById("commentForm");
-    const commentText = document.getElementById("commentText");
-
-    commentForm.addEventListener("submit", function (event) {
-        event.preventDefault();
-
-        const text = commentText.value.trim();
-        if (!text) {
-            alert("Комментарий не может быть пустым.");
-            return;
-        }
-
-        fetch("{{ url_for('add_comment', post_id=post.post_id) }}", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-Requested-With": "XMLHttpRequest"
-            },
-            body: JSON.stringify({text: text})
-        })
-    });
-
-    document.addEventListener("DOMContentLoaded", function () {
-        const postId = "{{ post.post_id }}";
-
-        fetchComments(postId);
-
-        setInterval(() => fetchComments(postId), 3000);
-        window.onload = () => fetchComments(postId);
-
-        function fetchComments(postId) {
-            fetch(`/get_comment/${postId}`)
-                .then(response => response.json())
-                .then(data => {
-                    const container = document.getElementById('comments');
-                    container.innerHTML = "";
-
-                    data.comments.forEach(comment => {
-                        const div = document.createElement("div");
-                        div.classList.add("comment");
-
-                        div.innerHTML = `
-  <div class="comment-card">
-    <img class="comment-avatar" src="/${comment.comment_author_image}" alt="avatar">
-    <div class="comment-content">
-      <div class="comment-header">
-        <strong>
-          <a class="comment-author" href="/user/${comment.comment_author_id}">
-            ${comment.comment_author_username}
-          </a>
-        </strong>
-      </div>
-      <div class="comment-text">${comment.context}</div>
-      <div class="comment-date">${comment.datestamp}</div>
-    </div>
-  </div>
-`;
-                        ;
-
-                        container.appendChild(div);
-                    });
-                })
-                .catch(err => console.error("Ошибка загрузки комментариев:", err));
-        }
-    })
-</script>
-
 </body>
 </html>
 {% endblock %}

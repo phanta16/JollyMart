@@ -15,7 +15,9 @@ def all_comments():
 
     try:
         post_id = request_data['post_id']
-        comments = session.query(CommentaryInfo).filter_by(post_id=post_id).all()
+        comments = session.query(CommentaryInfo).filter_by(post_id=post_id).order_by(
+            CommentaryInfo.comment_id.asc()).all()
+
         return make_response(jsonify([{
 
             'comment_id': c.comment_id,
@@ -75,14 +77,12 @@ def delete_comment():
     session = db_session.create_session()
 
     try:
-        post_id = request_data['post_id']
-        comment_author_id = request_data['comment_author_id']
-        timestamp = request_data['timestamp']
-        comment = session.query(CommentaryInfo).filter_by(comment_author_id=comment_author_id, post_id=post_id,
-                                                          context=timestamp).first()
+        comment_id = request_data['comment_id']
+        comment = session.query(CommentaryInfo).filter_by(comment_id=comment_id).first()
+        post_id = comment.post_id
         session.delete(comment)
         session.commit()
-        return make_response(jsonify({"status": "True"}))
+        return make_response(jsonify({"status": "True", "post_id": post_id}))
 
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}))
@@ -107,27 +107,6 @@ def post_deletion_protocol():
 
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}), 400)
-
-
-@app.route('/comment/change-comment', methods=['PATCH'])
-def change_comment():
-    request_data = request.get_json()
-
-    session = db_session.create_session()
-
-    try:
-        post_id = request_data['post_id']
-        comment_author_id = request_data['comment_author_id']
-        timestamp = request_data['timestamp']
-        new_context = request_data['new_context']
-        comment = session.query(CommentaryInfo).filter_by(comment_author_id=comment_author_id, post_id=post_id,
-                                                          context=timestamp).first()
-        comment.context = new_context
-        session.commit()
-        return make_response(jsonify({"status": "True"}))
-
-    except Exception as e:
-        return make_response(jsonify({"status": "False", "message": str(e)}))
 
 
 db_session.global_init('db/JollyCommentDB.db')

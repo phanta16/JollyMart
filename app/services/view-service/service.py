@@ -43,6 +43,21 @@ def registration():
 
     return render_template('register.html')
 
+@app.route('/delete_comment/<comment_id>', methods=['POST'])
+def delete_comment(comment_id):
+    headers = {
+        'Cookie': f'session_id={request.cookies.get("session_id")}',
+    }
+    recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
+    if recp['status'] != 'True':
+        return make_response(redirect(url_for('registration')))
+
+    recp = requests.post('http://auth-service:5007/comment/delete-comment', headers=headers, json={
+        "comment_id": comment_id
+    }).json()
+    post_id = recp['post_id']
+    return make_response(redirect(url_for('post', post_id=post_id)))
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -108,14 +123,11 @@ def post(post_id):
         return make_response(redirect(url_for('registration')))
 
     recp = requests.get(f'http://auth-service:5007/posts/get-post/{post_id}', headers=headers).json()
+    recp_user = requests.get(f'http://auth-service:5007/user/get-user', headers=headers).json()
     if recp['status'] != 'True':
         flash(recp['message'])
         return redirect(url_for('main'))
-    if recp['host']:
-        host = True
-    else:
-        host = False
-    return render_template('post.html', post=recp, is_owner=host)
+    return render_template('post.html', post=recp, current_user=recp_user)
 
 @app.route('/add_comment/<post_id>', methods=['POST'])
 def add_comment(post_id):
@@ -126,8 +138,7 @@ def add_comment(post_id):
     if recp['status'] != 'True':
         return make_response(redirect(url_for('registration')))
 
-    reque = request.get_json()
-    text = reque['text']
+    text = request.form['context']
 
     recp = requests.post('http://auth-service:5007/comment/new-comment', headers=headers, json={
         'post_id': post_id,
@@ -136,24 +147,9 @@ def add_comment(post_id):
     if recp['status'] != 'True':
         flash(recp['message'])
         return redirect(url_for('post', post_id=post_id))
-    return recp
+    return redirect(url_for('post', post_id=post_id))
 
-@app.route('/get_comment/<post_id>', methods=['GET'])
-def get_comment(post_id):
-    headers = {
-        'Cookie': f'session_id={request.cookies.get("session_id")}',
-    }
-    recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
-    if recp['status'] != 'True':
-        return make_response(redirect(url_for('registration')))
-
-    recp = requests.post('http://auth-service:5007/comment/all-comments', headers=headers, json={
-        'post_id': post_id,
-    }).json()
-    return jsonify({'comments': recp})
-
-
-@app.route('/toggle_favourite/<post_id>', methods=['GET'])
+@app.route('/toggle_favourite/<post_id>', methods=['POST'])
 def toggle_favourite(post_id):
     headers = {
         'Cookie': f'session_id={request.cookies.get("session_id")}',
@@ -161,29 +157,16 @@ def toggle_favourite(post_id):
     recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
     if recp['status'] != 'True':
         return make_response(redirect(url_for('registration')))
-
-    state = request.form.get('state')
-
-    if state == 'True' or state == True:
-        recp = requests.post('http://auth-service:5007/favourite/new-favourite', headers=headers,
+    recp = requests.post('http://auth-service:5007/favourite/dispatch-favourite', headers=headers,
                              json={'post_id': post_id}).json()
-        if recp['status'] != 'True':
-            flash(recp['message'])
-            return redirect(url_for('post', post_id=post_id))
-        flash('Успех!')
-        return recp
-
-    elif state == 'False' or state == False:
-        recp = requests.post('http://auth-service:5007/favourite/delete-favourite', headers=headers,
-                             json={'post_id': post_id}).json()
-        if recp['status'] != 'True':
-            flash(recp['message'])
-            return redirect(url_for('post', post_id=post_id))
-        flash('Успех!')
+    if recp['status'] != 'True':
+        flash(recp['message'])
         return redirect(url_for('post', post_id=post_id))
+    flash('Успех!')
+    return redirect(url_for('post', post_id=post_id))
 
 
-@app.route('/delete_post/<post_id>', methods=['GET'])
+@app.route('/delete_post/<post_id>', methods=['POST'])
 def delete_post(post_id):
     headers = {
         'Cookie': f'session_id={request.cookies.get("session_id")}',
@@ -255,29 +238,6 @@ def delete_account():
     resp = make_response(redirect(url_for('registration')))
     resp.set_cookie("session_id", '', expires=0)
     return resp
-
-
-@app.route('/update_avatar', methods=['POST'])
-def change_avatar():
-    headers = {
-        'Cookie': f'session_id={request.cookies.get("session_id")}',
-    }
-    recp = requests.post('http://auth-service:5007/auth/is-exists', headers=headers).json()
-    if recp['status'] != 'True':
-        return make_response(redirect(url_for('registration')))
-
-    file = request.files.get('avatar')
-    files = {
-        "image": (file.filename, file.stream, file.content_type),
-    }
-    recp = requests.post('http://auth-service:5007/user/set-avatar', files=files,
-                         cookies={'session_id': request.cookies.get("session_id")}).json()
-    if recp['status'] != 'True':
-        flash(recp['message'])
-        return redirect(url_for('main'))
-    flash('Успешно!')
-    return redirect(url_for('main'))
-
 
 @app.route('/update_email', methods=['POST'])
 def change_email():

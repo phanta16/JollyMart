@@ -213,13 +213,23 @@ def delete_post():
                                  headers=headers).json()
 
             comments = requests.post(f'http://comment-service:5002/comment/post-deletion',
-                                 headers=headers).json()
+                                 headers=headers, json={
+                    "post_id": post.post_id,
+                }).json()
+
+            favourite = requests.post(f'http://favourite-service:5004/favourite/delete-post',
+                                 headers=headers, json={
+                    "post_id": post.post_id,
+                }).json()
 
             if work["status"] != "True":
                 return make_response(jsonify({"status": "False", "message": work["message"]}), 404)
 
             if comments["status"] != "True":
                 return make_response(jsonify({"status": "False", "message": comments["message"]}), 404)
+
+            if favourite["status"] != "True":
+                return make_response(jsonify({"status": "False", "message": favourite["message"]}), 404)
 
             session.delete(post)
             session.commit()

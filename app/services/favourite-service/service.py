@@ -26,9 +26,28 @@ def favourite_all():
     except Exception as e:
         return make_response(jsonify({"status": "False", "message": str(e)}, 400))
 
+@app.route('/favourite/delete-post', methods=['POST'])
+def favourite_deletion_protocol(post_id):
+    try:
+        reque = request.get_json()
+        session = db_session.create_session()
 
-@app.route('/favourite/new-favourite', methods=['POST'])
-def new_favourite():
+        post_id = reque.get('post_id')
+
+        favs = session.query(CommentaryInfo).filter(FavouriteInfo.post_id == post_id).all()
+
+        for fav in favs:
+            session.delete(fav)
+
+        session.commit()
+
+        return make_response(jsonify([{"status": "True"}]))
+
+    except Exception as e:
+        return make_response(jsonify({"status": "False", "message": str(e)}), 400)
+
+@app.route('/favourite/dispatch-favourite', methods=['POST'])
+def favourite():
     try:
         headers = dict(request.headers)
 
@@ -37,6 +56,23 @@ def new_favourite():
         session = db_session.create_session()
         post_id = request_data['post_id']
         user_id = str(request.headers['X-User-Id'])
+
+        if session.query(FavouriteInfo).filter(
+                (FavouriteInfo.post_id == post_id) & (FavouriteInfo.author_id == user_id)).first():
+            new_favourite(post_id, user_id, headers)
+            return make_response(jsonify({"status": "True",}))
+        else:
+            delete_favourite(post_id, user_id)
+            return make_response(jsonify({"status": "True",}))
+    except Exception as e:
+        return make_response(jsonify({"status": "False", "message": str(e)}, 400))
+
+
+
+def new_favourite(post_id, user_id, headers):
+    try:
+
+        session = db_session.create_session()
 
         post_info = requests.get(f'http://posts-service:5009/posts/{post_id}', headers=headers).json()
         if post_info['status'] == 'True':
@@ -57,14 +93,10 @@ def new_favourite():
         return make_response(jsonify({"status": "False", "message": str(e)}, 400))
 
 
-@app.route('/favourite/delete-favourite', methods=['POST'])
-def delete_favourite():
+def delete_favourite(post_id, user_id):
     try:
-        request_data = request.get_json()
 
         session = db_session.create_session()
-        post_id = request_data['post_id']
-        user_id = str(request.headers['X-User-Id'])
 
         rate = session.query(FavouriteInfo).filter_by(author_id=user_id, post_id=post_id)
         if not session.query(FavouriteInfo).filter_by(author_id=user_id, post_id=post_id).first():

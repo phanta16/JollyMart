@@ -284,7 +284,6 @@
     <div class="section">
         <h3>⚙️ Управление профилем</h3>
         <div class="profile-actions">
-            <button onclick="openModal('avatar')">Изменить аватар</button>
             <button onclick="openModal('email')">Изменить email</button>
             <button onclick="openModal('password')">Сменить пароль</button>
             <button onclick="openModal('delete')">Удалить аккаунт</button>
@@ -324,15 +323,7 @@
         modal.style.display = 'flex';
 
         switch (type) {
-            case 'avatar':
-                modalBody.innerHTML = `
-          <h3>Изменить аватар</h3>
-          <form method="POST" action="/update_avatar" enctype="multipart/form-data">
-            <input type="file" name="avatar" required>
-            <button type="submit">Загрузить</button>
-          </form>
-        `;
-                break;
+
             case 'email':
                 modalBody.innerHTML = `
           <h3>Изменить Email</h3>
