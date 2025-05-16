@@ -256,6 +256,7 @@ def existing_user():
 ROUTES = {
 
     "/chat/": "http://chat-service:5001",
+    "/comment/": "http://comment-service:5002",
     "/user/": "http://user-service:5003",
     "/favourite/": "http://favourite-service:5004",
     "/media/": "http://media-service:5005",
