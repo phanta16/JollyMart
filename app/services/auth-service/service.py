@@ -4,14 +4,11 @@ import secrets
 
 import requests
 from email_validator import validate_email, EmailNotValidError
-from flask import jsonify, request, Flask, make_response
+from flask import jsonify, request, Flask, make_response, Request
 from flask_cors import CORS
 
 import db_session
 from model import AuthInfo
-
-app = Flask(__name__)
-CORS(app, supports_credentials=True)
 
 
 def check_data(password, email, username):
@@ -56,20 +53,19 @@ def check_data(password, email, username):
     return {"status": "True", }
 
 
-@app.route('/auth/register', methods=['POST'])
-def register():
+def register(req_json:Request):
     try:
 
         session = db_session.create_session()
-        file = request.files['image']
+        file = req_json.files['image']
 
         files = {
             "image": (file.filename, file.stream, file.content_type),
-                }
+        }
 
-        username = request.form['username']
-        hashed_password = request.form['password']
-        email = request.form['email']
+        username = req_json.form['username']
+        hashed_password = req_json.form['password']
+        email = req_json.form['email']
         session_id = secrets.token_hex(16)
 
         if check_data(hashed_password, email, username)["status"] != 'True':
@@ -103,11 +99,11 @@ def register():
         return make_response(jsonify({'status': 'False', 'message': str(e)}))
 
 
-@app.route('/auth/login', methods=['POST'])
-def login():
+def login(reque:Request):
     try:
+
+        req_json = reque.get_json()
         session = db_session.create_session()
-        req_json = request.get_json()
 
         email = req_json.get('email')
         hashed_password = req_json.get('password')
@@ -128,13 +124,10 @@ def login():
         return make_response(jsonify({'status': 'False', 'message': str(e)}), 404)
 
 
-def change_password(uid, new_password, headers):
+def change_password(uid, new_password):
     try:
 
         session = db_session.create_session()
-
-        id = uid
-        new_password = new_password
 
         if not check_data(new_password, 'example@gmail.com', 'XXXXXXXX'):
             return make_response(jsonify(
@@ -142,7 +135,7 @@ def change_password(uid, new_password, headers):
 
         new_hashed_password = hashlib.sha512(new_password.encode('utf-8')).hexdigest()
 
-        user = session.get(AuthInfo, id)
+        user = session.get(AuthInfo, uid)
         user.hashed_password = new_hashed_password
         session.commit()
 
@@ -160,21 +153,17 @@ def change_email(uid, new_email, headers):
 
         session = db_session.create_session()
 
-        id = uid
-        new_email = new_email
-
         if not check_data('example12345', new_email, 'XXXXXXXX'):
             return make_response(jsonify(
                 {'status': 'False', 'message': check_data('example12345', new_email, 'XXXXXXXX')["message"]}))
 
         user_work = requests.patch('http://user-service:5003/user/change-email', headers=headers, json={
-            "uid": id,
+            "uid": uid,
             "new_mail": new_email,
-
         })
 
         if user_work.json()['status'] == 'True':
-            user = session.get(AuthInfo, id)
+            user = session.get(AuthInfo, uid)
             user.email = new_email
             session.commit()
 
@@ -191,7 +180,6 @@ def delete_user(uid, headers):
     try:
 
         session = db_session.create_session()
-        uid = uid
 
         headers = dict(headers)
 
@@ -216,26 +204,9 @@ def delete_user(uid, headers):
         return make_response(jsonify({'status': 'False', 'message': str(e)}), 401)
 
 
-@app.route('/auth/validate_user/', methods=['POST'])
-def validate_user():
+def existing_user(req_json:Request):
     try:
-        session = db_session.create_session()
-        req_json = request.get_json()
-        uid = req_json.get('uid')
-        user = session.get(AuthInfo, uid)
-        if user:
-            return make_response(jsonify({'status': 'True'}), 200)
-        else:
-            return make_response(jsonify({'status': 'False', 'message': 'Неавторизованный пользователь!'}), 401)
-
-    except Exception as e:
-
-        return make_response(jsonify({'status': 'False', 'message': str(e)}), 401)
-
-@app.route('/auth/is-exists', methods=['POST'])
-def existing_user():
-    try:
-        session_id = request.cookies.get("session_id")
+        session_id = req_json.cookies.get("session_id")
 
         if not session_id:
             return jsonify({"status": "False",
@@ -247,149 +218,7 @@ def existing_user():
             return jsonify({"status": "False",
                             "message": "Invalid session"}), 401
 
-        return jsonify({"status": "True",})
+        return jsonify({"status": "True", })
 
     except Exception as e:
         return make_response(jsonify({'status': 'False', 'message': str(e)}), 401)
-
-
-ROUTES = {
-
-    "/comment/": "http://comment-service:5002",
-    "/user/": "http://user-service:5003",
-    "/favourite/": "http://favourite-service:5004",
-    "/media/": "http://media-service:5005",
-    "/posts/": "http://posts-service:5009",
-}
-
-
-@app.before_request
-def gateway():
-    session_id = request.cookies.get("session_id")
-
-    if request.path == "/auth/register" or request.path == "/auth/login" or request.path == "/auth/is-exists":
-        return
-
-    if not session_id:
-        return jsonify({"status": "False",
-                                 "message": "Non-authorized"}), 401
-
-    session = db_session.create_session()
-    user = session.query(AuthInfo).filter_by(session_id=session_id).first()
-    if not user:
-        return jsonify({"status": "False",
-                        "message": "Invalid session"}), 401
-
-    uid = user.uid
-
-    if request.path == "/auth/change_email":
-        recp = request.get_json()
-        new_email = recp.get('new_email')
-        headers = request.headers
-        return change_email(uid, new_email, headers)
-
-    if request.path == "/auth/change_password":
-        recp = request.get_json()
-        new_password = recp.get('new_password')
-        headers = request.headers
-        return change_password(uid, new_password, headers)
-
-    if request.path == "/auth/delete_user":
-        headers = request.headers
-        return delete_user(uid, headers)
-
-    for prefix, target_url in ROUTES.items():
-        if request.path.startswith(prefix):
-            service_url = target_url + prefix[:-1] + request.path[len(prefix) - 1:]
-            break
-    else:
-        return jsonify({"status": "False", "message": "Unknown route!"})
-
-    headers = {k: v for k, v in request.headers if k.lower() not in [
-        'host', 'connection', 'content-length', 'keep-alive',
-        'proxy-authenticate', 'proxy-authorization', 'te',
-        'trailers', 'transfer-encoding', 'upgrade'
-    ]}
-
-    headers["X-User-Id"] = str(uid)
-
-    if request.content_type == 'application/json':
-        try:
-            response = requests.request(
-                method=request.method,
-                url=service_url,
-                headers=headers,
-                params=request.args,
-                json=request.get_json(silent=True)
-            )
-        except requests.exceptions.RequestException as e:
-            return jsonify({"status": "False", "message": "Service is unavailable!"})
-        f_response = make_response(response.content, response.status_code)
-        excluded = [
-            'host', 'connection', 'content-length', 'keep-alive',
-            'proxy-authenticate', 'proxy-authorization', 'te',
-            'trailers', 'transfer-encoding', 'upgrade'
-        ]
-        for name, value in headers.items():
-            if name.lower() not in excluded:
-                f_response.headers[name] = value
-
-        return f_response
-
-
-    if request.content_type == 'multipart/form-data':
-        headers = {k: v for k, v in request.headers if k.lower() not in [
-            'host', 'connection', 'content-length', 'keep-alive',
-            'proxy-authenticate', 'proxy-authorization', 'te',
-            'trailers', 'transfer-encoding', 'upgrade', 'content-type'
-        ]}
-        files = {
-            key: (file.filename, file.stream, file.content_type)
-            for key, file in request.files.items()
-        }
-        try:
-            response = requests.request(
-                method=request.method,
-                url=service_url,
-                headers=headers,
-                data=request.form,
-                params=request.args,
-                files=files,
-            )
-        except requests.exceptions.RequestException as e:
-            return jsonify({"status": "False", "message": "Service is unavailable!"})
-
-        f_response = make_response(response.content, response.status_code)
-        excluded = ['content-encoding', 'transfer-encoding', 'connection']
-        for name, value in headers.items():
-            if name.lower() not in excluded:
-                f_response.headers[name] = value
-
-        return f_response
-
-    try:
-        response = requests.request(
-            method=request.method,
-            url=service_url,
-            headers=headers,
-            params=request.args,
-            data=request.get_data()
-        )
-    except requests.exceptions.RequestException as e:
-        return jsonify({"status": "False", "message": "Service is unavailable!"})
-    f_response = make_response(response.content, response.status_code)
-    excluded = [
-        'host', 'connection', 'content-length', 'keep-alive',
-        'proxy-authenticate', 'proxy-authorization', 'te',
-        'trailers', 'transfer-encoding', 'upgrade'
-                ]
-    for name, value in headers.items():
-        if name.lower() not in excluded:
-            f_response.headers[name] = value
-
-    return f_response
-
-
-app.config['SECRET_KEY'] = 'THE_MOST_SECRET_KEY_YOU_HAVE_EVER_SEEN'
-
-db_session.global_init('db/JollyAuthDB.db')
